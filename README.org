@@ -1,0 +1,17 @@
+#+Title: README
+* Purpose
+  - Store program name, start time, and stop time
+  - Serve history
+
+* Parts
+** cycle.py
+An object that stores data and builds BSON, JSON, and Python
+dictionaries for easy insertion into data stores.
+** cycles.py
+An object for processing a pile of Cycle objects.
+** listen.py
+Listens for barcode scanner input, and data over serial from an
+Arduino.
+** serve.py (maybe)
+Use eve to serve data. It's possible we'll upload to a central MongoDB
+server.
