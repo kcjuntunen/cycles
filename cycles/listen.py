@@ -42,6 +42,9 @@ SCANCODES = {
 
 
 class InputDeviceDispatcher(file_dispatcher):
+    """
+    Handle scanner.
+    """
     def __init__(self, device):
         self.device = device
         self.program = ''
@@ -64,16 +67,25 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def devlist():
+    """
+    Return a list of devices accessible to evdev.
+    """
     devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
     return devices
 
 
 def print_devlist():
+    """
+    Just in case I want to print the list.
+    """
     for device in devlist():
         print(device.fn, device.name, device.phys)
 
 
 def get_kbd():
+    """
+    Figure out which device we want.
+    """
     for device in devlist():
         # /dev/input/event4
         # WIT Electron Company WIT 122-UFS V2.03
@@ -83,6 +95,9 @@ def get_kbd():
 
 
 def recv_scanner(device):
+    """
+    Parse the huge load of stuff that rolls in from the scanner.
+    """
     program = ''
     for event in device.read_loop():
         if event.type == evdev.ecodes.EV_KEY:
@@ -95,6 +110,9 @@ def recv_scanner(device):
 
 
 def main():
+    """
+    Main loop.
+    """
     try:
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_kbd()))

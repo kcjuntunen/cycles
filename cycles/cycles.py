@@ -45,9 +45,15 @@ class Cycles(object):
             self._inner = list(cycle)
 
     def remove(self, cycle):
+        """
+        Remove cycle from the list.
+        """
         self._inner.remove(cycle)
 
     def average_time(self):
+        """
+        Return the average .diff() of all items.
+        """
         total = sum([item.diff().seconds
                      for item in self._inner])
         return total / len(self)

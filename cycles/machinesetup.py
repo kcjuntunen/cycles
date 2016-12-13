@@ -22,6 +22,13 @@ from cycle import Cycle
 
 
 class MachineSetup(Cycle):
+    """
+    A setup object. It's basically the same as a cycle. It's just here to
+    properly label the delta as a setup event.
+    """
     @property
     def program(self):
+        """
+        Append " Setup" to  the program name.
+        """
         return '{} Setup'.format(self._program)
