@@ -27,8 +27,8 @@ class MachineSetup(Cycle):
     properly label the delta as a setup event.
     """
     @property
-    def program(self):
+    def display_name(self):
         """
         Append " Setup" to  the program name.
         """
-        return '{} Setup'.format(self._program)
+        return '{} Setup'.format(self.program)
