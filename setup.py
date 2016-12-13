@@ -22,6 +22,7 @@ setup(name='Machine Cycles',
       packages=['cycles'],
       install_requires=[
           'eve',
+          'bson',
           'pymongo',
           'python-dateutil',
           'pyserial',
