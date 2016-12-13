@@ -18,9 +18,32 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+
 class Cycles(object):
     """
+    An object for processing a pile of Cycle objects.
     """
-    def __init__(self, **):
-        pass
-        
+    def __init__(self, *args):
+        self._inner = None
+        if args is not None:
+            self._inner = list(args)
+
+    def __iter__(self):
+        for item in self._inner:
+            yield item
+
+    def append(self, cycle):
+        """
+        Add another cycle to the pile.
+        """
+        if self._inner is not None:
+            self._inner.append(cycle)
+        else:
+            self._inner = list(cycle)
+
+    def program_list(self):
+        """
+        List program names of all the cycles.
+        """
+        if self._inner is not None:
+            return [item.program for item in self._inner]
