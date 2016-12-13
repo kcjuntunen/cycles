@@ -18,8 +18,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from bson import SON
 from json import loads
+from .cycle import Cycle
 
 
 class Cycles(object):
@@ -29,7 +29,7 @@ class Cycles(object):
     def __init__(self, *args):
         self._inner = None
         if args is not None:
-            self._inner = list(args)
+            self._inner = [arg for arg in args if isinstance(arg, Cycle)]
 
     def __iter__(self):
         for item in self._inner:
@@ -37,6 +37,15 @@ class Cycles(object):
 
     def __len__(self):
         return len(self._inner)
+
+    def __getitem__(self, index):
+        return self._inner[index]
+
+    def __setitem__(self, index, value):
+        self._inner[index] = value
+
+    def __delitem__(self, index):
+        self._inner.remove(self._inner[index])
 
     def append(self, cycle):
         """
