@@ -38,15 +38,15 @@ class Cycle(object):
         self._stoptime = None
 
     def __iter__(self):
-        for i in [['program', self._program],
-                  ['start', self._starttime],
-                  ['stop', self._stoptime]]:
+        for i in [['program', self.program],
+                  ['start', self.starttime],
+                  ['stop', self.stoptime]]:
             yield i
 
     def __str__(self):
-        obj_contents = {'program': self._program,
-                        'starttime': self._starttime,
-                        'stoptime': self._stoptime}
+        obj_contents = {'program': self.program,
+                        'starttime': self.starttime,
+                        'stoptime': self.stoptime}
         return ', '.join(['{}: {}'.format(key, obj_contents[key])
                           for key in obj_contents])
 
@@ -65,10 +65,10 @@ class Cycle(object):
         """
         start, stop = None, None
         if self._starttime is not None:
-            start = self._starttime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
+            start = self.starttime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
         if self._stoptime is not None:
-            stop = self._stoptime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
-        return dumps(dict(program=self._program, start=start, stop=stop))
+            stop = self.stoptime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
+        return dumps(dict(program=self.program, start=start, stop=stop))
 
     def process_event(self, event):
         """
@@ -111,8 +111,8 @@ class Cycle(object):
         the two times.
         """
         res = None
-        if self._starttime is not None and self._stoptime is not None:
-            res = self._stoptime - self._starttime
+        if self.starttime is not None and self.stoptime is not None:
+            res = self.stoptime - self.starttime
         return res
 
     @property

@@ -22,5 +22,6 @@ from cycle import Cycle
 
 
 class MachineSetup(Cycle):
-    def __str__(self):
-        return '{} Setup'.format(super.__str__())
+    @property
+    def program(self):
+        return '{} Setup'.format(self._program)
