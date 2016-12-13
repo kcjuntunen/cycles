@@ -20,10 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 from asyncore import file_dispatcher, loop
 import evdev
-
-from cycles import Cycles
-from cycle import Cycle
-from machinesetup import MachineSetup
+from cycles.cycle import Cycle
+from cycles.cycles import Cycles
+from cycles.machinesetup import MachineSetup
 
 PROGRAM = ''
 
