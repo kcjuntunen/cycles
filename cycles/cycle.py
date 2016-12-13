@@ -18,8 +18,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 from datetime import datetime
-from bson import SON
 from json import loads, dumps
+from bson import SON
 
 
 class Cycle(object):
@@ -85,7 +85,7 @@ class Cycle(object):
         except TypeError:
             # not even str
             pass
-        
+
         if json_obj is not None:
             if 'start' in json_obj:
                 self.start()
@@ -114,3 +114,24 @@ class Cycle(object):
         if self._starttime is not None and self._stoptime is not None:
             res = self._stoptime - self._starttime
         return res
+
+    @property
+    def program(self):
+        """
+        Return program name.
+        """
+        return self._program
+
+    @property
+    def starttime(self):
+        """
+        Return start time.
+        """
+        return self._starttime
+
+    @property
+    def stoptime(self):
+        """
+        Return stop time.
+        """
+        return self._stoptime
