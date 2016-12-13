@@ -44,6 +44,14 @@ class Cycles(object):
         else:
             self._inner = list(cycle)
 
+    def remove(self, cycle):
+        self._inner.remove(cycle)
+
+    def average_time(self):
+        total = sum([item.diff().seconds
+                     for item in self._inner])
+        return total / len(self)
+
     @property
     def program_list(self):
         """
@@ -51,3 +59,5 @@ class Cycles(object):
         """
         if self._inner is not None:
             return [item.program for item in self._inner]
+        else:
+            return None
