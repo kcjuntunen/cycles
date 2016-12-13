@@ -25,7 +25,6 @@ class TestCreate(TestCase):
     def test_none_program_list(self):
         c = Cycles()
         self.assertIsNone(c.program_list)
-        
 
     def test_len(self):
         self.assertEqual(len(self.cycles), 3)
@@ -43,4 +42,4 @@ class TestCreate(TestCase):
     def test_average(self):
         for i in self.cycles:
             i._stoptime += timedelta(0, 120, 0)
-            self.assertEqual(self.cycles.average_time(), 120)
+        self.assertEqual(self.cycles.average_time(), 120)
