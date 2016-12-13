@@ -18,6 +18,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from bson import SON
+from json import loads
+
 
 class Cycles(object):
     """
@@ -55,8 +58,21 @@ class Cycles(object):
         Return the average .diff() of all items.
         """
         total = sum([item.diff().seconds
-                     for item in self._inner])
+                     for item in self._inner if item.diff() is not None])
         return total / len(self)
+
+    def bsons(self):
+        """
+        Return a SON object.
+        """
+        return [d.bsons() for d in self._inner]
+
+    def jsons(self):
+        """
+        Return a JSON object.
+        """
+        jstr = '[{}]'.format(', '.join(jstr.jsons() for jstr in self._inner))
+        return loads(jstr)
 
     @property
     def program_list(self):
