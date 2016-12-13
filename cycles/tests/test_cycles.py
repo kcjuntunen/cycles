@@ -17,6 +17,16 @@ class TestCreate(TestCase):
         self.cycles.append(d)
         self.assertTrue('444444D' in self.cycles.program_list)
 
+    def test_none_append(self):
+        a, b = Cycles(), Cycle('182989A')
+        a.append(b)
+        self.assertEqual(len(a), 1)
+
+    def test_none_program_list(self):
+        c = Cycles()
+        self.assertIsNone(c.program_list)
+        
+
     def test_len(self):
         self.assertEqual(len(self.cycles), 3)
 

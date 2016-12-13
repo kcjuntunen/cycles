@@ -57,7 +57,7 @@ class Cycles(object):
         """
         List program names of all the cycles.
         """
-        if self._inner is not None:
+        if self._inner is not None and len(self._inner) > 0:
             return [item.program for item in self._inner]
         else:
             return None
