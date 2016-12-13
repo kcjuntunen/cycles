@@ -32,6 +32,9 @@ class Cycles(object):
         for item in self._inner:
             yield item
 
+    def __len__(self):
+        return len(self._inner)
+
     def append(self, cycle):
         """
         Add another cycle to the pile.
@@ -41,6 +44,7 @@ class Cycles(object):
         else:
             self._inner = list(cycle)
 
+    @property
     def program_list(self):
         """
         List program names of all the cycles.
