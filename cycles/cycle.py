@@ -97,6 +97,7 @@ class Cycle(object):
         Store a start time.
         """
         self._starttime = datetime.utcnow()
+        self._stoptime = None
 
     def stop(self):
         """
@@ -121,6 +122,13 @@ class Cycle(object):
         Return program name.
         """
         return self._program
+
+    @property
+    def display_name(self):
+        """
+        Return a name for display.
+        """
+        return self.program
 
     @property
     def starttime(self):
