@@ -21,6 +21,11 @@ import os
 from asyncore import file_dispatcher, loop
 import evdev
 
+from cycles import Cycles
+from cycle import Cycle
+from machinesetup import MachineSetup
+
+PROGRAM = ''
 
 SCANCODES = {
     2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
@@ -54,16 +59,22 @@ class InputDeviceDispatcher(file_dispatcher):
         return self.device.read()
 
     def handle_read(self):
-        for event in self.device.read_loop():
-            if event.type == evdev.ecodes.EV_KEY:
-                data = evdev.categorize(event)
-                if data.keystate == 1 and data.scancode != 28:
-                    k = (SCANCODES.get(data.scancode) or '')
-                    self.program += k
-                if (data.scancode == self.device.ecodes.KEY_ENTER and
-                        self.program != ''):
-                    print('|{}|'.format(self.program))
-                    self.program = ''
+        self.program = recv_scanner(self.device)
+
+
+class SerialDispatcher(file_dispatcher):
+    """
+    Handle serial.
+    """
+    def __init__(self, device):
+        self.device = device
+        file_dispatcher.__init__(self, device)
+
+    def recv(self, ign=None):
+        return self.device.read()
+
+    # def handle_read(self):
+    #     recv_serial(self.device)
 
 
 def devlist():
@@ -106,8 +117,16 @@ def recv_scanner(device):
                 keypress = (SCANCODES.get(data.scancode) or '')
                 program += keypress
             if data.scancode == evdev.ecodes.KEY_ENTER:
+                ms = MachineSetup(program)
+                ms.start()
                 return program
 
+# def recv_serial(device):
+#     c = Cycle(PROGRAM)
+#     cc = Cycles()
+#     cc.append(c)
+#     for event in device.read_loop():
+#         c.process_event(event)
 
 def main():
     """
