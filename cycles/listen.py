@@ -58,11 +58,13 @@ class InputDeviceDispatcher(file_dispatcher):
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
+        import pdb; pdb.set_trace()
         return self.device.read()
 
     def handle_read(self):
         global CYCLES
         CYCLES = Cycles(MachineSetup(recv_scanner(self.device)))
+        print(CYCLES[0])
 
 
 class SerialDispatcher(file_dispatcher):
@@ -74,6 +76,7 @@ class SerialDispatcher(file_dispatcher):
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
+        import pdb; pdb.set_trace()
         return self.device.read()
 
     def handle_read(self):
@@ -82,6 +85,7 @@ class SerialDispatcher(file_dispatcher):
         current_cycle = Cycle(CYCLES[0].program)
         current_cycle.process_event(input_string)
         CYCLES.append(current_cycle)
+        print(current_cycle)
 
 
 def devlist():
@@ -141,7 +145,7 @@ def main():
     try:
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_kbd()))
-        ser = Serial("/dev/ttyS0", 115200)
+        ser = Serial("/dev/ttyAMA0", 115200)
         SerialDispatcher(ser)
         loop()
     except KeyboardInterrupt:
