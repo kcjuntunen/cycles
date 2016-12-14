@@ -81,7 +81,7 @@ class Cycles(object):
         Return a JSON object.
         """
         jstr = '[{}]'.format(', '.join(jstr.jsons() for jstr in self._inner))
-        return loads(jstr)
+        return jstr
 
     @property
     def program_list(self):
