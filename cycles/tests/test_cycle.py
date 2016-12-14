@@ -12,17 +12,17 @@ class TestCreate(TestCase):
 
     def test_process_start(self):
         self.c._starttime = None
-        self.c.process_event('{"start": 0}')
+        self.c.process_event('{ "Event": {"start": 0}}')
         self.assertIsNotNone(self.c._starttime)
 
     def test_process_stop(self):
         self.c_stoptime = None
-        self.c.process_event('{"stop": 0}')
+        self.c.process_event('{ "Event": {"stop": 0}}')
         self.assertIsNotNone(self.c._stoptime)
 
     def test_process_stop_is_none(self):
         self.c._starttime, self.c._stoptime = None, None
-        self.c.process_event('{"stop": 0}')
+        self.c.process_event('{ "Event": {"stop": 0}}')
         self.assertIsNone(self.c._stoptime)
 
     def test_process_normal(self):
@@ -34,7 +34,7 @@ class TestCreate(TestCase):
 
     def test_process_no_stop(self):
         self.c._starttime, self.c._stoptime = None, None
-        self.c.process_event('{"stop": 0}')
+        self.c.process_event('{ "Event": {"stop": 0}}')
         self.assertIs(self.c._starttime, None)
         self.assertIs(self.c._stoptime, None)
 
