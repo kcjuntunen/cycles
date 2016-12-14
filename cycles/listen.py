@@ -53,18 +53,22 @@ class InputDeviceDispatcher(file_dispatcher):
     Handle scanner.
     """
     def __init__(self, device):
+        print("Scanner started.")
         self.device = device
         self.program = ''
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
         import pdb; pdb.set_trace()
+        print("scanner recv")
         return self.device.read()
 
     def handle_read(self):
+        print("handle scanner")
         global CYCLES
         CYCLES = Cycles(MachineSetup(recv_scanner(self.device)))
-        print(CYCLES[0])
+        for c in CYCLES:
+            print("scan -> %s" % (c))
 
 
 class SerialDispatcher(file_dispatcher):
@@ -72,20 +76,25 @@ class SerialDispatcher(file_dispatcher):
     Handle serial.
     """
     def __init__(self, device):
+        print("Serial started.")
         self.device = device
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
+        print("serial recv")
+        device.flush()
         import pdb; pdb.set_trace()
         return self.device.read()
 
     def handle_read(self):
+        print("handle serial")
         global CYCLES
         input_string = recv_serial(self.device)
         current_cycle = Cycle(CYCLES[0].program)
         current_cycle.process_event(input_string)
         CYCLES.append(current_cycle)
-        print(current_cycle)
+        for c in CYCLES:
+            print("motion -> %s" % (c))
 
 
 def devlist():
@@ -130,12 +139,14 @@ def recv_scanner(device):
             if data.scancode == evdev.ecodes.KEY_ENTER and program != '':
                 ms = MachineSetup(program)
                 ms.start()
-                print("%s -> %s" % (len(CYCLES), ms))
                 return program
 
 
 def recv_serial(device):
-    return device.readline().decode('utf-8').strip()
+    device.flush()
+    strline = device.readline().decode('utf-8').strip()
+    print("Got %s" % (strline))
+    return strline
 
 
 def main():
