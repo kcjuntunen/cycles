@@ -88,9 +88,9 @@ class Cycle(object):
             pass
 
         if json_obj is not None:
-            if 'start' in json_obj:
+            if 'start' in json_obj["Event"]:
                 self.start()
-            if 'stop' in json_obj:
+            if 'stop' in json_obj["Event"]:
                 self.stop()
 
     def start(self):
