@@ -7,3 +7,4 @@ class TestCreate(TestCase):
         program_name = '38288A'
         ms = MachineSetup(program_name)
         self.assertEqual(ms.display_name, '{} Setup'.format(program_name))
+        self.assertIsNotNone(ms.starttime)

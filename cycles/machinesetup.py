@@ -26,6 +26,10 @@ class MachineSetup(Cycle):
     A setup object. It's basically the same as a cycle. It's just here to
     properly label the delta as a setup event.
     """
+    def __init__(self, program):
+        super().__init__(program)
+        self.start()
+
     @property
     def display_name(self):
         """

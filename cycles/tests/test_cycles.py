@@ -4,7 +4,7 @@ from ..machinesetup import MachineSetup
 from ..cycles import Cycles
 from sys import stderr
 from datetime import timedelta
-
+import json
 
 class TestCreate(TestCase):
     def setUp(self):
@@ -12,15 +12,15 @@ class TestCreate(TestCase):
                       MachineSetup('333333C'))
         a, b, c = Cycle('111111A'), Cycle('222222B'), Cycle('333333C')
         self.cycles = Cycles(sa, a, sb, b, sc, c)
-        sa.start()
+        # sa.start()
         sa.stop()
         a.start()
         a.stop()
-        sb.start()
+        # sb.start()
         sb.stop()
         b.start()
         b.stop()
-        sc.start()
+        # sc.start()
         sc.stop()
         c.start()
         c.stop()
@@ -62,4 +62,13 @@ class TestCreate(TestCase):
         self.assertEqual(len(self.cycles.bsons()), 6)
 
     def test_jsons(self):
-        print(self.cycles.jsons(), stderr)
+        x = True
+        try:
+            f = json.loads(str(self.cycles.jsons()))
+            if "start" not in f[0]:
+                self.assertTrue("start" in f[0])
+        except Exception as e:
+            print('%s: %s' % (e, self.cycles.jsons()))
+            x = False
+
+        self.assertTrue(x)
