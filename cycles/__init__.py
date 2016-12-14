@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
-
 __author__ = "K. C. Juntunen"
 __copyright__ = "Copyright 2016, K. C. Juntunen"
 __credits__ = ["K. C. Juntunen"]
@@ -26,12 +25,7 @@ __maintainer__ = "K. C. Juntunen"
 __email__ = "juntunen.kc@gmail.com"
 __status__ = "Development"
 
-from .cycle import Cycle
-from .machinesetup import MachineSetup
-from .cycles import Cycles
-from . import listen
-
-__all__ = ["Cycle", "MachineSetup", "Cycles", "listen"]
+__all__ = ["cycle", "machinesetup", "cycles", ]
 
 # Logging format
 LOGGING_FORMAT = '%(asctime)-15s:%(levelname)s:%(name)s:%(message)s'
