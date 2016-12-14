@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from json import loads
 from .cycle import Cycle
-
+from .machinesetup import MachineSetup
 
 class Cycles(object):
     """
@@ -29,7 +29,19 @@ class Cycles(object):
     def __init__(self, *args):
         self._inner = None
         if args is not None:
-            self._inner = [arg for arg in args if isinstance(arg, Cycle)]
+            # self._inner = [arg for arg in args if (isinstance(arg, Cycle) and
+            #                                        arg not in self)]
+            for arg in args:
+                if isinstance(arg, Cycle):
+                    if arg in self:
+                        idx = self._inner.index(arg)
+                        self._inner[idx]._starttime = None
+                        self._inner[idx]._stoptime = None
+                    else:
+                        if self._inner is not None:
+                            self._inner.append(arg)
+                        else:
+                            self._inner = [arg]
 
     def __iter__(self):
         for item in self._inner:
@@ -48,10 +60,13 @@ class Cycles(object):
         self._inner.remove(self._inner[index])
 
     def __contains__(self, rhs):
-        if isinstance(rhs, str):
-            return rhs in [item.program for item in self._inner]
-        else:
-            return rhs in [item for item in self._inner]
+        try:
+            if isinstance(rhs, str):
+                return rhs in [item.program for item in self._inner]
+            else:
+                return rhs in [item for item in self._inner]
+        except TypeError:
+            return False
 
     def append(self, cycle):
         """
@@ -60,7 +75,7 @@ class Cycles(object):
         if self._inner is not None:
             self._inner.append(cycle)
         else:
-            self._inner = list(cycle)
+            self._inner = [cycle]
 
     def remove(self, cycle):
         """
