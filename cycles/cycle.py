@@ -44,6 +44,12 @@ class Cycle(object):
                   ['stop', self.stoptime]]:
             yield i
 
+    def __eq__(self, rhs):
+        if isinstance(rhs, str):
+            return self.program == rhs
+        else:
+            return str(self) == str(rhs)
+
     def __str__(self):
         obj_contents = {'program': self.program,
                         'starttime': self.starttime,
