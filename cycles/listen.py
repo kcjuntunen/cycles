@@ -113,16 +113,18 @@ def print_devlist():
         print(device.fn, device.name, device.phys)
 
 
-def get_kbd():
+def get_device(device_names):
     """
     Figure out which device we want.
     """
-    for device in devlist():
-        # /dev/input/event4
-        # WIT Electron Company WIT 122-UFS V2.03
-        # usb-0000:00:06.0-1/input0
-        if 'WIT' in device.name:
-            return device.fn
+    # /dev/input/event4
+    # WIT Electron Company WIT 122-UFS V2.03
+    # usb-0000:00:06.0-1/input0
+    device_list = devlist()
+    for name in device_names:
+        for dev in device_list:
+            if name in dev.name:
+                return dev.fn
 
 
 def recv_scanner(device):
@@ -155,7 +157,7 @@ def main():
     """
     try:
         os.system('stty -echo')
-        InputDeviceDispatcher(evdev.InputDevice(get_kbd()))
+        InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
         ser = Serial("/dev/ttyAMA0", 115200)
         SerialDispatcher(ser)
         loop()
