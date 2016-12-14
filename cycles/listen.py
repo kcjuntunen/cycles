@@ -19,12 +19,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 import os
 from asyncore import file_dispatcher, loop
+from serial import Serial
+from threading import Thread
 import evdev
+
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
-PROGRAM = ''
+CYCLES = Cycles()
 
 SCANCODES = {
     2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
@@ -58,7 +61,8 @@ class InputDeviceDispatcher(file_dispatcher):
         return self.device.read()
 
     def handle_read(self):
-        self.program = recv_scanner(self.device)
+        global CYCLES
+        CYCLES = Cycles(MachineSetup(recv_scanner(self.device)))
 
 
 class SerialDispatcher(file_dispatcher):
@@ -72,8 +76,12 @@ class SerialDispatcher(file_dispatcher):
     def recv(self, ign=None):
         return self.device.read()
 
-    # def handle_read(self):
-    #     recv_serial(self.device)
+    def handle_read(self):
+        global CYCLES
+        input_string = recv_serial(self.device)
+        current_cycle = Cycle(CYCLES[0].program)
+        current_cycle.process_event(input_string)
+        CYCLES.append(current_cycle)
 
 
 def devlist():
@@ -115,17 +123,16 @@ def recv_scanner(device):
             if data.keystate == 1 and data.scancode != 28:
                 keypress = (SCANCODES.get(data.scancode) or '')
                 program += keypress
-            if data.scancode == evdev.ecodes.KEY_ENTER:
+            if data.scancode == evdev.ecodes.KEY_ENTER and program != '':
                 ms = MachineSetup(program)
                 ms.start()
+                print("%s -> %s" % (len(CYCLES), ms))
                 return program
 
-# def recv_serial(device):
-#     c = Cycle(PROGRAM)
-#     cc = Cycles()
-#     cc.append(c)
-#     for event in device.read_loop():
-#         c.process_event(event)
+
+def recv_serial(device):
+    return device.readline().decode('utf-8').strip()
+
 
 def main():
     """
@@ -134,8 +141,12 @@ def main():
     try:
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_kbd()))
+        ser = Serial("/dev/ttyS0", 115200)
+        SerialDispatcher(ser)
         loop()
     except KeyboardInterrupt:
+        print('KeyboardInterrupt')
+    finally:
         os.system('stty echo')
         print('Exiting...')
 
