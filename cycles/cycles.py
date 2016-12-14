@@ -47,8 +47,8 @@ class Cycles(object):
     def __delitem__(self, index):
         self._inner.remove(self._inner[index])
 
-    def __eq__(self, rhs):
-        if rhs isinstance(rhs, str):
+    def __contains__(self, rhs):
+        if isinstance(rhs, str):
             return rhs in [item.program for item in self._inner]
         else:
             return rhs in [item for item in self._inner]
