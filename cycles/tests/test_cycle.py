@@ -3,6 +3,7 @@ from ..cycle import Cycle
 from datetime import datetime
 from bson import SON
 
+
 class TestCreate(TestCase):
     def setUp(self):
         self.c = Cycle('111111B')
@@ -50,7 +51,7 @@ class TestCreate(TestCase):
 
     def test_str(self):
         self.assertIsInstance(str(self.c), str)
-        
+
     def test_bsons(self):
         self.assertIsInstance(self.c.bsons(), SON)
 
@@ -63,3 +64,19 @@ class TestCreate(TestCase):
     def test_diff_is_none(self):
         self.c._stoptime = None
         self.assertIsNone(self.c.diff())
+
+    def test_register_stop_func(self):
+        def testfunc(cycle):
+            cycle._program = 'hahaha'
+
+        def testfunc2(cycle):
+            cycle._program += 'x'
+
+        c = Cycle('this is a program')
+        # import ipdb; ipdb.set_trace()
+        c.register_stopfunc(testfunc)
+        c.register_stopfunc(testfunc2)
+        c.start()
+        c.stop()
+        self.assertEqual(len(c._stopfunctions), 2)
+        self.assertEqual(c.program, 'hahahax')

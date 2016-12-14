@@ -36,6 +36,7 @@ class Cycle(object):
         self._program = program
         self._starttime = None
         self._stoptime = None
+        self._stopfunctions = None
 
     def __iter__(self):
         for i in [['program', self.program],
@@ -106,6 +107,19 @@ class Cycle(object):
         if self._starttime is not None:
             self._stoptime = datetime.utcnow()
 
+        if self._stopfunctions is not None and len(self._stopfunctions) > 0:
+            for func in self._stopfunctions:
+                func(self)
+
+    def register_stopfunc(self, func):
+        """
+        Functions to execute when data is complete.
+        """
+        if self._stopfunctions is None:
+            self._stopfunctions = [func]
+        else:
+            self._stopfunctions.append(func)
+
     def diff(self):
         """
         Return a datetime.timedelta indicating the difference between
@@ -143,3 +157,4 @@ class Cycle(object):
         Return stop time.
         """
         return self._stoptime
+
