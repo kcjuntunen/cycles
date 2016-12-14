@@ -22,13 +22,14 @@ from asyncore import file_dispatcher, loop
 from serial import Serial
 from threading import Thread
 import evdev
+from pymongo import MongoClient
 
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CYCLES = Cycles()
-POLL_ARGS = {"comm": "go",}
+POLL_ARGS = {"comm": "go", }
 SCANCODES = {
     2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
     7: '6', 8: '7', 9: '8', 10: '9', 11: '0',
@@ -59,7 +60,6 @@ class InputDeviceDispatcher(file_dispatcher):
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
-        import pdb; pdb.set_trace()
         print("scanner recv")
         return self.device.read()
 
@@ -82,8 +82,6 @@ class SerialDispatcher(file_dispatcher):
 
     def recv(self, ign=None):
         print("serial recv")
-        device.flush()
-        import pdb; pdb.set_trace()
         return self.device.read()
 
     def handle_read(self):
@@ -96,16 +94,33 @@ class SerialDispatcher(file_dispatcher):
         for c in CYCLES:
             print("motion -> %s" % (c))
 
+
+def insert_and_remove(cyc):
+    m = MongoClient(host='localhost', port=27017)
+    tc = m.testdb.testcollection
+    import pdb; pdb.set_trace()
+    tc.insert_one(cyc)
+    CYCLES.remove(cyc)
+
 def serial_loop(ser):
     while True:
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
         current_cycle = Cycle(CYCLES[0].program)
+        import pdb; pdb.set_trace()
+        if current_cycle in CYCLES:
+            for cyc in CYCLES:
+                if cyc == current_cycle:
+                    current_cycle = cyc
+        else:
+            CYCLES.append(current_cycle)
+            import pdb; pdb.set_trace()
+            current_cycle.register_stopfunc(insert_and_remove)
         current_cycle.process_event(line)
-        CYCLES.append(current_cycle)
         for c in CYCLES:
-            print("motion -> %s" % (c))
+            print("motion -> %s, diff: %s" % (c, c.diff()))
+
 
 def devlist():
     """
@@ -150,7 +165,8 @@ def recv_scanner(device):
                 program += keypress
             if data.scancode == evdev.ecodes.KEY_ENTER and program != '':
                 ms = MachineSetup(program)
-                ms.start()
+                if ms in CYCLES:
+                    ms = CYCLES._inner.index(ms)
                 return program
 
 
@@ -179,7 +195,6 @@ def main():
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
         ser = Serial("/dev/ttyAMA0", 115200)
-
         t = Thread(target=serial_loop, args=(ser), name='SerialLoop')
         t.daemon = True
         t.start()
@@ -198,4 +213,4 @@ def main():
 
 
 if __name__ == "__main__":
-    test_serial()
+    main()
