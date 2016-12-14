@@ -27,6 +27,7 @@ class TestCreate(TestCase):
 
     def test_find_in(self):
         self.assertTrue('111111A' in self.cycles)
+        self.assertTrue(self.cycles[0] in self.cycles)
 
     def test_append_and_program_list(self):
         d = Cycle('444444D')
