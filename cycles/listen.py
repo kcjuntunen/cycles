@@ -28,7 +28,7 @@ from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CYCLES = Cycles()
-
+POLL_ARGS = {"comm": "go",}
 SCANCODES = {
     2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
     7: '6', 8: '7', 9: '8', 10: '9', 11: '0',
@@ -96,6 +96,16 @@ class SerialDispatcher(file_dispatcher):
         for c in CYCLES:
             print("motion -> %s" % (c))
 
+def serial_loop(ser):
+    while True:
+        if POLL_ARGS["comm"] == "stop":
+            exit(0)
+        line = ser.readline().decode('utf-8').strip()
+        current_cycle = Cycle(CYCLES[0].program)
+        current_cycle.process_event(line)
+        CYCLES.append(current_cycle)
+        for c in CYCLES:
+            print("motion -> %s" % (c))
 
 def devlist():
     """
@@ -145,11 +155,21 @@ def recv_scanner(device):
 
 
 def recv_serial(device):
-    device.flush()
     strline = device.readline().decode('utf-8').strip()
     print("Got %s" % (strline))
     return strline
 
+CYCLE = Cycle('test')
+def test_serial():
+    ser = Serial("/dev/ttyAMA0", 115200)
+    while True:
+        line = ser.readline().decode('utf-8').strip()
+        global CYCLE
+        CYCLE.process_event(line)
+        CYCLES.append(CYCLE)
+        for c in CYCLES:
+            print("motion -> %s" % (c))
+        print('-'*10)
 
 def main():
     """
@@ -159,9 +179,16 @@ def main():
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
         ser = Serial("/dev/ttyAMA0", 115200)
-        SerialDispatcher(ser)
+
+        t = Thread(target=serial_loop, args=(ser), name='SerialLoop')
+        t.daemon = True
+        t.start()
+
+        # SerialDispatcher(ser)
         loop()
     except KeyboardInterrupt:
+        POLL_ARGS["comm"] = "stop"
+        t.join()
         print('KeyboardInterrupt')
     finally:
         os.system('stty echo')
@@ -171,4 +198,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    test_serial()
