@@ -23,11 +23,19 @@ from serial import Serial
 from threading import Thread
 import evdev
 from pymongo import MongoClient
+from pickle import Unpickler
 
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
+#import ipdb; ipdb.set_trace()
+with open('config.pickle', 'rb') as fh:
+    unpickler = Unpickler(fh)
+    CONFIG = unpickler.load()
+
+SETUP = MachineSetup('STUB')
+CYCLE = Cycle('STUB')
 CYCLES = Cycles()
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
@@ -66,61 +74,48 @@ class InputDeviceDispatcher(file_dispatcher):
     def handle_read(self):
         print("handle scanner")
         global CYCLES
-        CYCLES = Cycles(MachineSetup(recv_scanner(self.device)))
-        for c in CYCLES:
+        global SETUP
+        SETUP = MachineSetup(recv_scanner(self.device))
+        CYCLES = Cycles(SETUP)
+        SETUP.register_stopfunc(insert_and_remove)
+        for c in SETUP, CYCLE:
             print("scan -> %s" % (c))
 
 
-class SerialDispatcher(file_dispatcher):
-    """
-    Handle serial.
-    """
-    def __init__(self, device):
-        print("Serial started.")
-        self.device = device
-        file_dispatcher.__init__(self, device)
-
-    def recv(self, ign=None):
-        print("serial recv")
-        return self.device.read()
-
-    def handle_read(self):
-        print("handle serial")
-        global CYCLES
-        input_string = recv_serial(self.device)
-        current_cycle = Cycle(CYCLES[0].program)
-        current_cycle.process_event(input_string)
-        CYCLES.append(current_cycle)
-        for c in CYCLES:
-            print("motion -> %s" % (c))
-
-
 def insert_and_remove(cyc):
-    m = MongoClient(host='localhost', port=27017)
-    tc = m.testdb.testcollection
-    import pdb; pdb.set_trace()
-    tc.insert_one(cyc)
-    CYCLES.remove(cyc)
+    uri = 'mongodb://%s:%s@%s:%s/%s' % (CONFIG['dblogin'], CONFIG['dbpass'],
+                                        CONFIG['dbhost'], CONFIG['dbport'],
+                                        CONFIG['db'])
+    m = MongoClient(uri)
+    db = m.get_database(CONFIG['db'])
+    tc = db.get_collection(CONFIG['collection'])
+    print("%s.%s.%s" % (CONFIG['dbhost'], CONFIG['db'], CONFIG['collection']))
+    if cyc.stoptime is not None and cyc.starttime is not None:
+        tc.insert_one(cyc.bsons())
+        print("insert -> %s, diff: %s" % (cyc, cyc.diff()))
+        CYCLES.remove(cyc)
+
+class SerialThread(Thread):
+    def __init__(self, ser):
+        Thread.__init__(self)
+        self.ser = ser
+    def run(self):
+        serial_loop(self.ser)
+
 
 def serial_loop(ser):
+    print('serial started')
+    global CYCLE
     while True:
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
-        current_cycle = Cycle(CYCLES[0].program)
-        import pdb; pdb.set_trace()
-        if current_cycle in CYCLES:
-            for cyc in CYCLES:
-                if cyc == current_cycle:
-                    current_cycle = cyc
-        else:
-            CYCLES.append(current_cycle)
-            import pdb; pdb.set_trace()
-            current_cycle.register_stopfunc(insert_and_remove)
-        current_cycle.process_event(line)
-        for c in CYCLES:
-            print("motion -> %s, diff: %s" % (c, c.diff()))
-
+        if CYCLE.program != SETUP.program:
+            CYCLE = Cycle(SETUP.program)
+            CYCLE.register_stopfunc(insert_and_remove)
+        if SETUP.stoptime is None:
+            SETUP.stop()
+        CYCLE.process_event(line)
 
 def devlist():
     """
@@ -175,10 +170,11 @@ def recv_serial(device):
     print("Got %s" % (strline))
     return strline
 
-CYCLE = Cycle('test')
 def test_serial():
     ser = Serial("/dev/ttyAMA0", 115200)
     while True:
+        if POLL_ARGS["comm"] == "stop":
+            exit()
         line = ser.readline().decode('utf-8').strip()
         global CYCLE
         CYCLE.process_event(line)
@@ -195,7 +191,7 @@ def main():
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
         ser = Serial("/dev/ttyAMA0", 115200)
-        t = Thread(target=serial_loop, args=(ser), name='SerialLoop')
+        t = SerialThread(ser)
         t.daemon = True
         t.start()
 
