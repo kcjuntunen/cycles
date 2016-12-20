@@ -39,7 +39,8 @@ class Cycle(object):
         self._stopfunctions = None
 
     def __iter__(self):
-        for i in [['program', self.program],
+        for i in [['display_name', self.display_name],
+                  ['program', self.program],
                   ['start', self.starttime],
                   ['stop', self.stoptime]]:
             yield i
@@ -51,9 +52,7 @@ class Cycle(object):
             return str(self) == str(rhs)
 
     def __str__(self):
-        obj_contents = {'program': self.program,
-                        'starttime': self.starttime,
-                        'stoptime': self.stoptime}
+        obj_contents = dict(self)
         return ', '.join(['{}: {}'.format(key, obj_contents[key])
                           for key in obj_contents])
 

@@ -81,7 +81,11 @@ class Cycles(object):
         """
         Remove cycle from the list.
         """
-        self._inner.remove(cycle)
+        try:
+            self._inner.remove(cycle)
+        except ValueError:
+            # wasn't in there
+            pass
 
     def average_time(self):
         """
