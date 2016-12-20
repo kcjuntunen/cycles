@@ -24,12 +24,13 @@ from threading import Thread
 import evdev
 from pymongo import MongoClient
 from pickle import Unpickler
+from collections import namedtuple
 
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
-#import ipdb; ipdb.set_trace()
+Config = namedtuple('Config', 'dbhost dbport dbuser dbpwd db collection')
 with open('config.pickle', 'rb') as fh:
     unpickler = Unpickler(fh)
     CONFIG = unpickler.load()
@@ -83,13 +84,13 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
-    uri = 'mongodb://%s:%s@%s:%s/%s' % (CONFIG['dblogin'], CONFIG['dbpass'],
-                                        CONFIG['dbhost'], CONFIG['dbport'],
-                                        CONFIG['db'])
+    uri = 'mongodb://%s:%s@%s:%s/%s' % (CONFIG.dbuser, CONFIG.dbpwd,
+                                        CONFIG.dbhost, CONFIG.dbport,
+                                        CONFIG.db)
     m = MongoClient(uri)
-    db = m.get_database(CONFIG['db'])
-    tc = db.get_collection(CONFIG['collection'])
-    print("%s.%s.%s" % (CONFIG['dbhost'], CONFIG['db'], CONFIG['collection']))
+    db = m.get_database(CONFIG.db)
+    tc = db.get_collection(CONFIG.collection)
+    print("%s.%s.%s" % (CONFIG.dbhost, CONFIG.db, CONFIG.collection))
     if cyc.stoptime is not None and cyc.starttime is not None:
         tc.insert_one(cyc.bsons())
         print("insert -> %s, diff: %s" % (cyc, cyc.diff()))
