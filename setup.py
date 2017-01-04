@@ -30,7 +30,7 @@ setup(name='Machine Cycles',
       ],
       include_package_data=True,
       zip_safe=False,
-      scripts=['bin/cycles'],
+      scripts=['bin/monitormachines.py'],
       test_suite='nose.collector',
       tests_require=['nose'],
 )
