@@ -1,0 +1,14 @@
+[Unit]
+Description=Machine Cycletime Monitor
+Requires=network.target network-online.target
+After=network-online.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/monitormachines.py > /dev/null
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
