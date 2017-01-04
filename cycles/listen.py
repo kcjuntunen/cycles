@@ -37,13 +37,14 @@ st = os.stat('/etc/cycles')
 if os.getuid() == st.st_uid:
     try:
         config_file = glob('/etc/cycles/config.*.pickle')[0]
-        Config = namedtuple('Config', 'dbhost dbport dbuser dbpwd db collection')
+        Config = namedtuple('Config', 'serialport serialbaud dbhost dbport dbuser dbpwd db collection')
         with open(config_file, 'rb') as fh:
             unpickler = Unpickler(fh)
             c = unpickler.load()
             # Turns out namedtuple's aren't very useful.
             # I probably won't bother with them again.
-            CONFIG = Config(c['dbhost'], c['dbport'], c['dbuser'], c['dbpwd'], c['db'], c['collection'])
+            CONFIG = Config(c['serialport'], c['serialbaud'], c['dbhost'], c['dbport'],
+                            c['dbuser'], c['dbpwd'], c['db'], c['collection'])
     except IndexError:
         print("No config file found.", file=stderr)
         exit(1)
@@ -209,7 +210,7 @@ def main():
     try:
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
-        ser = Serial("/dev/ttyAMA0", 115200)
+        ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
         t.daemon = True
         t.start()
