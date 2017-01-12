@@ -43,7 +43,7 @@ if os.getuid() == st.st_uid:
             c = unpickler.load()
             # Turns out namedtuple's aren't very useful.
             # I probably won't bother with them again.
-            CONFIG = Config(c['serialport'], c['serialbaud'], c['dbhost'], c['dbport'],
+            CONFIG = Config(glob('/dev/tty[AU]*')[0], c['serialbaud'], c['dbhost'], c['dbport'],
                             c['dbuser'], c['dbpwd'], c['db'], c['collection'])
     except IndexError:
         print("No config file found.", file=stderr)
@@ -98,8 +98,7 @@ class InputDeviceDispatcher(file_dispatcher):
         SETUP = MachineSetup(recv_scanner(self.device))
         CYCLES = Cycles(SETUP)
         SETUP.register_stopfunc(insert_and_remove)
-        # for c in SETUP, CYCLE:
-        #     print("scan -> %s" % (c))
+        # print("scan -> %s" % (CYCLES))
 
 
 def insert_and_remove(cyc):
@@ -124,7 +123,7 @@ class SerialThread(Thread):
 
 
 def serial_loop(ser):
-    print('serial started')
+    # print('serial started')
     global CYCLE
     while True:
         if POLL_ARGS["comm"] == "stop":
