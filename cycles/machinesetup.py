@@ -28,6 +28,7 @@ class MachineSetup(Cycle):
     """
     def __init__(self, program):
         super().__init__(program)
+        self._setup = True
         self.start()
 
     @property

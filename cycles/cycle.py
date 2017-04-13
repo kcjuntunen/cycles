@@ -17,9 +17,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
+import socket
 from datetime import datetime
+from collections import namedtuple
 from json import loads, dumps
 from bson import SON
+
+HOSTNAME = socket.getfqdn().split()[0]
 
 
 class Cycle(object):
@@ -33,16 +37,27 @@ class Cycle(object):
         """
         We only need a program name to start our Cycle object.
         """
+        self._setup = False
         self._program = program
+        self._partID = '0'
+        self._job = 'Unknown'
+        self._qty = 1
+        if '$' in program:
+            self._program, self._job, self._qty, self._partID = program.split('$')
+
         self._starttime = None
         self._stoptime = None
         self._stopfunctions = None
 
     def __iter__(self):
         for i in [['display_name', self.display_name],
+                  ['partID', self.partID],
                   ['program', self.program],
+                  ['job', self.job],
+                  ['qty', self.qty],
                   ['start', self.starttime],
-                  ['stop', self.stoptime]]:
+                  ['stop', self.stoptime],
+                  ['setup', self.setup], ]:
             yield i
 
     def __eq__(self, rhs):
@@ -75,6 +90,16 @@ class Cycle(object):
         if self._stoptime is not None:
             stop = self.stoptime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
         return dumps(dict(program=self.program, start=start, stop=stop))
+
+    def data_set(self):
+        """
+        Returns a set of data.
+        """
+        DataSet = namedtuple('DataSet', "machine program job qty "
+                             "starttime stoptime")
+        ds = DataSet(HOSTNAME, self.partID, self.program, self.job, self.qty,
+                     self.starttime, self.stoptime, self.setup, )
+        return ds
 
     def process_event(self, event):
         """
@@ -165,3 +190,18 @@ class Cycle(object):
         """
         return self._stoptime
 
+    @property
+    def job(self):
+        return self._job
+
+    @property
+    def qty(self):
+        return self._qty
+
+    @property
+    def setup(self):
+        return self._setup
+
+    @property
+    def partID(self):
+        return int(self._partID, 16)
