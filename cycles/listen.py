@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
-import os, stat
+import os
 from sys import stderr
 from asyncore import file_dispatcher, loop
 from serial import Serial
@@ -37,14 +37,16 @@ st = os.stat('/etc/cycles')
 if os.getuid() == st.st_uid:
     try:
         config_file = glob('/etc/cycles/config.*.pickle')[0]
-        Config = namedtuple('Config', 'serialport serialbaud dbhost dbport dbuser dbpwd db collection')
+        Config = namedtuple('Config', 'serialport serialbaud dbhost dbport '
+                            'dbuser dbpwd db collection')
         with open(config_file, 'rb') as fh:
             unpickler = Unpickler(fh)
             c = unpickler.load()
             # Turns out namedtuple's aren't very useful.
             # I probably won't bother with them again.
-            CONFIG = Config(glob('/dev/tty[AU]*')[0], c['serialbaud'], c['dbhost'], c['dbport'],
-                            c['dbuser'], c['dbpwd'], c['db'], c['collection'])
+            CONFIG = Config(glob('/dev/tty[AU]*')[0], c['serialbaud'],
+                            c['dbhost'], c['dbport'], c['dbuser'],
+                            c['dbpwd'], c['db'], c['collection'])
     except IndexError:
         print("No config file found.", file=stderr)
         exit(1)
@@ -114,10 +116,12 @@ def insert_and_remove(cyc):
         # print("insert -> %s, diff: %s" % (cyc, cyc.diff()))
         CYCLES.remove(cyc)
 
+
 class SerialThread(Thread):
     def __init__(self, ser):
         Thread.__init__(self)
         self.ser = ser
+
     def run(self):
         serial_loop(self.ser)
 
@@ -135,6 +139,7 @@ def serial_loop(ser):
         if SETUP.stoptime is None:
             SETUP.stop()
         CYCLE.process_event(line)
+
 
 def devlist():
     """
@@ -189,6 +194,7 @@ def recv_serial(device):
     print("Got %s" % (strline))
     return strline
 
+
 def test_serial():
     ser = Serial("/dev/ttyAMA0", 115200)
     while True:
@@ -202,13 +208,16 @@ def test_serial():
             print("motion -> %s" % (c))
         print('-'*10)
 
+
 def main():
     """
     Main loop.
     """
     try:
         os.system('stty -echo')
-        InputDeviceDispatcher(evdev.InputDevice(get_device(['WIT 122-UFS',])))
+        InputDeviceDispatcher(evdev.InputDevice(
+            get_device(['WIT 122-UFS',
+                        'Barcode Reader', ])))
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
         t.daemon = True
