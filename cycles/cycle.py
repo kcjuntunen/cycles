@@ -86,17 +86,19 @@ class Cycle(object):
         """
         start, stop = None, None
         if self._starttime is not None:
-            start = self.starttime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
+            start = self.starttime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         if self._stoptime is not None:
-            stop = self.stoptime.strftime("%Y-%m-%dT%h:%M:%S.%fZ")
-        return dumps(dict(program=self.program, start=start, stop=stop))
+            stop = self.stoptime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        return dumps(dict(display_name=self.display_name, partID=self.partID,
+                          program=self.program, job=self.job, qty=self.qty,
+                          start=start, stop=stop, setup=self.setup))
 
     def data_set(self):
         """
         Returns a set of data.
         """
-        DataSet = namedtuple('DataSet', "machine program job qty "
-                             "starttime stoptime")
+        DataSet = namedtuple('DataSet', "machine partID program job "
+                             "qty starttime stoptime setup")
         ds = DataSet(HOSTNAME, self.partID, self.program, self.job, self.qty,
                      self.starttime, self.stoptime, self.setup, )
         return ds
