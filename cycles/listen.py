@@ -23,7 +23,7 @@ from asyncore import file_dispatcher, loop
 from serial import Serial
 from threading import Thread
 import evdev
-from pymongo import MongoClient
+from cycles import mysql
 from pickle import Unpickler
 from collections import namedtuple
 from glob import glob
@@ -104,17 +104,8 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
-    uri = 'mongodb://%s:%s@%s:%s/%s' % (CONFIG.dbuser, CONFIG.dbpwd,
-                                        CONFIG.dbhost, CONFIG.dbport,
-                                        CONFIG.db)
-    m = MongoClient(uri)
-    db = m.get_database(CONFIG.db)
-    tc = db.get_collection(CONFIG.collection)
-    # print("%s.%s.%s" % (CONFIG.dbhost, CONFIG.db, CONFIG.collection))
-    if cyc.stoptime is not None and cyc.starttime is not None:
-        tc.insert_one(cyc.bsons())
-        # print("insert -> %s, diff: %s" % (cyc, cyc.diff()))
-        CYCLES.remove(cyc)
+    mysql.insert(cyc, CONFIG)
+    CYCLES.remove(cyc)
 
 
 class SerialThread(Thread):
