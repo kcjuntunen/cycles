@@ -40,12 +40,12 @@ def config():
                                 config.get('Database', 'pwd'),
                                 config.get('Database', 'port'),
                                 config.get('Database', 'db'),
-                                config.get('Serial', 'port'),
+                                #config.get('Serial', 'port'),
                                 glob('/dev/tty[AU]*')[0],
                                 config.get('Serial', 'baud'))
                 return CONFIG
         except IndexError:
-            print("Serial port file found.")
+            print("Serial port not found.")
             exit(1)
         except Exception as e:
             print(e,)
