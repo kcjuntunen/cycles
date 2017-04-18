@@ -18,44 +18,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 import os
-from sys import stderr
 from asyncore import file_dispatcher, loop
 from serial import Serial
 from threading import Thread
 import evdev
+from cycles import config
 from cycles import mysql
-from pickle import Unpickler
-from collections import namedtuple
-from glob import glob
-
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
-st = os.stat('/etc/cycles')
-
-if os.getuid() == st.st_uid:
-    try:
-        config_file = glob('/etc/cycles/config.*.pickle')[0]
-        Config = namedtuple('Config', 'serialport serialbaud dbhost dbport '
-                            'dbuser dbpwd db collection')
-        with open(config_file, 'rb') as fh:
-            unpickler = Unpickler(fh)
-            c = unpickler.load()
-            # Turns out namedtuple's aren't very useful.
-            # I probably won't bother with them again.
-            CONFIG = Config(glob('/dev/tty[AU]*')[0], c['serialbaud'],
-                            c['dbhost'], c['dbport'], c['dbuser'],
-                            c['dbpwd'], c['db'], c['collection'])
-    except IndexError:
-        print("No config file found.", file=stderr)
-        exit(1)
-    except Exception as e:
-        print(e, file=stderr)
-        exit(1)
-else:
-    raise PermissionError('Cannot access /etc/cycles')
-
+CONFIG = config.config()
 SETUP = MachineSetup('STUB')
 CYCLE = Cycle('STUB')
 CYCLES = Cycles()
