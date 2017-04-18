@@ -28,10 +28,8 @@ HOSTNAME = socket.getfqdn().split()[0]
 
 class Cycle(object):
     """
-    A cycle record. The plan is to use Google Charts timeline. All I
-    should need is [program, start, stop]. This object holds a program
-    name, and utc datetime objects created by executing .start(), or
-    .stop().
+    A cycle record. The input can be '$'-separated items. The order should
+    be 1) program, 2) job, 3) blank_qty, 4) partID.
     """
     def __init__(self, program):
         """
@@ -95,7 +93,8 @@ class Cycle(object):
 
     def data_set(self):
         """
-        Returns a set of data.
+        Returns a set of data that can be easily inserted into a traditional
+        SQL db.
         """
         DataSet = namedtuple('DataSet', "machine partID program job "
                              "qty starttime stoptime setup")
@@ -194,16 +193,29 @@ class Cycle(object):
 
     @property
     def job(self):
+        """
+        Return the job number collected upon instantiation.
+        """
         return self._job
 
     @property
     def qty(self):
+        """
+        Return the qty received upon instantiation.
+        """
         return self._qty
 
     @property
     def setup(self):
+        """
+        Is setup time?
+        This looks to be revealing a design flaw.
+        """
         return self._setup
 
     @property
     def partID(self):
+        """
+        Return the partID received upon instantiation.
+        """
         return int(self._partID, 16)
