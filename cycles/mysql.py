@@ -22,6 +22,9 @@ import pymysql.cursors
 
 
 def insert(cyc, config):
+    """
+    Insert cycle data into a MySQL DB.
+    """
     connection = pymysql.connect(host=config.dbhost,
                                  user=config.dbuser,
                                  password=config.dbpass,
@@ -38,3 +41,23 @@ def insert(cyc, config):
             connection.commit()
         finally:
             connection.close()
+
+def log(entry, config):
+    """
+    Insert log data into MySQL DB.
+    """
+    connection = pymysql.connect(host=config.dbhost,
+                                 user=config.dbuser,
+                                 password=config.dbpass,
+                                 db=config.db,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            sql = ("INSERT INTO `GEN_ERRORS` "
+                   "(`ERRDATE`, `ERRUSER`, `ERRNUM`, `ERRMSG`, "
+                   "`ERROBJ`, `ERRAPP`) VALUES "
+                   "(%s, %s, %s, %s, %s, %s)")
+            cursor.execute(sql, entry)
+        connection.commit()
+    finally:
+        connection.close()
