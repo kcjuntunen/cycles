@@ -97,7 +97,7 @@ class Cycle(object):
         Returns a set of data that can be easily inserted into a traditional
         SQL db.
         """
-        DataSet = namedtuple('DataSet', "machine partID program job "
+        DataSet = namedtuple('DataSet', "machine partID program "
                              "qty starttime stoptime setup")
         ds = DataSet(HOSTNAME, self.partID, self.program, self.qty,
                      self.starttime, self.stoptime, self.setup, )
