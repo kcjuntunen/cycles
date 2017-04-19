@@ -31,9 +31,9 @@ def insert(cyc, config):
         try:
             with connection.cursor() as cursor:
                 sql = ("INSERT INTO `CUT_CYCLE_TIMES` "
-                       "(`MACHNUM`, `PARTID`, `PROGRAM`, `JOB`, "
+                       "(`MACHNUM`, `PARTID`, `PROGRAM`, "
                        "`QTY`, `STARTTIME`, `STOPTIME`, `SETUP`) VALUES "
-                       "(%s, %s, %s, %s, %s, %s, %s, %s)")
+                       "(%s, %s, %s, %s, %s, %s, %s)")
                 cursor.execute(sql, cyc.data_set())
             connection.commit()
         finally:

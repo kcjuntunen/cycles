@@ -42,7 +42,7 @@ class Cycle(object):
         self._job = 'Unknown'
         self._qty = '1'
         if '$' in self._raw:
-            self._program, self._job, self._qty, self._partID = self._raw.split('$')
+            self._program, self._qty, self._partID = self._raw.split('$')
 
         self._starttime = None
         self._stoptime = None
@@ -52,7 +52,7 @@ class Cycle(object):
         for i in [['display_name', self.display_name],
                   ['partID', self.partID],
                   ['program', self.program],
-                  ['job', self.job],
+                  # ['job', self.job],
                   ['qty', self.qty],
                   ['start', self.starttime],
                   ['stop', self.stoptime],
@@ -89,7 +89,7 @@ class Cycle(object):
         if self._stoptime is not None:
             stop = self.stoptime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         return dumps(dict(display_name=self.display_name, partID=self.partID,
-                          program=self.program, job=self.job, qty=self.qty,
+                          program=self.program, qty=self.qty,
                           start=start, stop=stop, setup=self.setup))
 
     def data_set(self):
@@ -99,7 +99,7 @@ class Cycle(object):
         """
         DataSet = namedtuple('DataSet', "machine partID program job "
                              "qty starttime stoptime setup")
-        ds = DataSet(HOSTNAME, self.partID, self.program, self.job, self.qty,
+        ds = DataSet(HOSTNAME, self.partID, self.program, self.qty,
                      self.starttime, self.stoptime, self.setup, )
         return ds
 
@@ -199,12 +199,12 @@ class Cycle(object):
         """
         return self._stoptime
 
-    @property
-    def job(self):
-        """
-        Return the job number collected upon instantiation.
-        """
-        return self._job
+    # @property
+    # def job(self):
+    #     """
+    #     Return the job number collected upon instantiation.
+    #     """
+    #     return self._job
 
     @property
     def qty(self):
