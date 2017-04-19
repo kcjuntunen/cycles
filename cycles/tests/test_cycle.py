@@ -58,6 +58,12 @@ class TestCreate(TestCase):
     def test_jsons(self):
         self.assertIsInstance(self.c.jsons(), str)
 
+    def test_data_set(self):
+        self.assertEqual(self.c.data_set().program, '111111B')
+        self.assertEqual(self.c.data_set().job, 'Unknown')
+        self.assertEqual(self.c.data_set().qty, 1)
+        self.assertEqual(self.c.data_set().setup, False)
+
     def test_diff(self):
         self.assertEqual(self.c.diff(), self.c._stoptime - self.c._starttime)
 
