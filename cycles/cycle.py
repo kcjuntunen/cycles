@@ -31,17 +31,18 @@ class Cycle(object):
     A cycle record. The input can be '$'-separated items. The order should
     be 1) program, 2) job, 3) blank_qty, 4) partID.
     """
-    def __init__(self, program):
+    def __init__(self, raw_string):
         """
         We only need a program name to start our Cycle object.
         """
+        self._raw = raw_string
         self._setup = False
-        self._program = program
+        self._program = self._raw
         self._partID = '0'
         self._job = 'Unknown'
-        self._qty = 1
-        if '$' in program:
-            self._program, self._job, self._qty, self._partID = program.split('$')
+        self._qty = '1'
+        if '$' in self._raw:
+            self._program, self._job, self._qty, self._partID = self._raw.split('$')
 
         self._starttime = None
         self._stoptime = None
@@ -164,6 +165,13 @@ class Cycle(object):
         return res
 
     @property
+    def raw_string(self):
+        """
+        Return original string.
+        """
+        return self._raw
+
+    @property
     def program(self):
         """
         Return program name.
@@ -203,7 +211,7 @@ class Cycle(object):
         """
         Return the qty received upon instantiation.
         """
-        return self._qty
+        return int(self._qty, 10)
 
     @property
     def setup(self):
