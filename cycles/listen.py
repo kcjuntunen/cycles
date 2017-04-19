@@ -29,26 +29,47 @@ from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
-SETUP = MachineSetup('STUB')
+SETUP = MachineSetup('No program')
+SETUP.start()
 CYCLE = Cycle('STUB')
-CYCLES = Cycles()
+CYCLES = Cycles(SETUP)
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
-    2: '1', 3: '2', 4: '3', 5: '4', 6: '5',
-    7: '6', 8: '7', 9: '8', 10: '9', 11: '0',
+    0x02: '1', 0x03: '2', 0x04: '3', 0x05: '4', 0x06: '5',
+    0x07: '6', 0x08: '7', 0x09: '8', 0x0A: '9', 0x0B: '0',
 
-    16: 'Q', 17: 'W', 18: 'E', 19: 'R', 20: 'T',
-    21: 'Y', 22: 'U', 23: 'I', 24: 'O', 25: 'P',
+    0x0C: '-',
+
+    0x10: 'Q', 0x11: 'W', 0x12: 'E', 0x13: 'R', 0x14: 'T',
+    0x15: 'Y', 0x16: 'U', 0x17: 'I', 0x18: 'O', 0x19: 'P',
 
     # 28: 'CRLF',
 
-    30: 'A', 31: 'S', 32: 'D', 33: 'F', 34: 'G',
-    35: 'H', 36: 'J', 37: 'K', 38: 'L', 39: ';',
+    0x1E: 'A', 0x1F: 'S', 0x20: 'D', 0x21: 'F', 0x22: 'G',
+    0x23: 'H', 0x24: 'J', 0x25: 'K', 0x26: 'L', 0x27: ';',
 
-    # 42: 'LSHIFT',
+    # 0x2A: 'LSHIFT',
 
-    44: 'Z', 45: 'X', 46: 'C', 47: 'V', 48: 'B',
-    49: 'N', 50: 'M', 51: ',', 52: '.', 53: '/',
+    0x2C: 'Z', 0x2D: 'X', 0x2E: 'C', 0x2F: 'V', 0x30: 'B',
+    0x31: 'N', 0x32: 'M', 0x33: ',', 0x34: '.', 0x35: '/',
+
+    # 0x36: 'RSHIFT',
+}
+
+SHIFT_SCANCODES = {
+    0x02: '!', 0x03: '@', 0x04: '#', 0x05: '$', 0x06: '%',
+    0x07: '^', 0x08: '&', 0x09: '*', 0x0A: '(', 0x0B: ')',
+
+    0x0C: '_',
+
+    0x10: 'Q', 0x11: 'W', 0x12: 'E', 0x13: 'R', 0x14: 'T',
+    0x15: 'Y', 0x16: 'U', 0x17: 'I', 0x18: 'O', 0x19: 'P',
+
+    0x1E: 'A', 0x1F: 'S', 0x20: 'D', 0x21: 'F', 0x22: 'G',
+    0x23: 'H', 0x24: 'J', 0x25: 'K', 0x26: 'L', 0x27: ';',
+
+    0x2C: 'Z', 0x2D: 'X', 0x2E: 'C', 0x2F: 'V', 0x30: 'B',
+    0x31: 'N', 0x32: 'M', 0x33: '<', 0x34: '>', 0x35: '?',
 }
 
 
@@ -97,8 +118,8 @@ def serial_loop(ser):
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
-        if CYCLE.program != SETUP.program:
-            CYCLE = Cycle(SETUP.program)
+        if CYCLE.raw_string != SETUP.raw_string:
+            CYCLE = Cycle(SETUP.raw_string)
             CYCLE.register_stopfunc(insert_and_remove)
         if SETUP.stoptime is None:
             SETUP.stop()
@@ -140,12 +161,19 @@ def recv_scanner(device):
     Parse the huge load of stuff that rolls in from the scanner.
     """
     program = ''
+    shift = False
     for event in device.read_loop():
         if event.type == evdev.ecodes.EV_KEY:
             data = evdev.categorize(event)
+            if data.scancode == 0x2A:
+                shift = data.keystate == 1
             if data.keystate == 1 and data.scancode != 28:
-                keypress = (SCANCODES.get(data.scancode) or '')
-                program += keypress
+                if shift:
+                    keypress = (SHIFT_SCANCODES.get(data.scancode) or '')
+                    program += keypress
+                else:
+                    keypress = (SCANCODES.get(data.scancode) or '')
+                    program += keypress
             if data.scancode == evdev.ecodes.KEY_ENTER and program != '':
                 ms = MachineSetup(program)
                 if ms in CYCLES:
@@ -159,18 +187,18 @@ def recv_serial(device):
     return strline
 
 
-def test_serial():
-    ser = Serial("/dev/ttyAMA0", 115200)
-    while True:
-        if POLL_ARGS["comm"] == "stop":
-            exit()
-        line = ser.readline().decode('utf-8').strip()
-        global CYCLE
-        CYCLE.process_event(line)
-        CYCLES.append(CYCLE)
-        for c in CYCLES:
-            print("motion -> %s" % (c))
-        print('-'*10)
+# def test_serial():
+    # ser = Serial("/dev/ttyAMA0", 115200)
+    # while True:
+    #     if POLL_ARGS["comm"] == "stop":
+    #         exit()
+    #     line = ser.readline().decode('utf-8').strip()
+    #     global CYCLE
+    #     CYCLE.process_event(line)
+    #     CYCLES.append(CYCLE)
+    #     for c in CYCLES:
+    #         print("motion -> %s" % (c))
+    #     print('-'*10)
 
 
 def main():
