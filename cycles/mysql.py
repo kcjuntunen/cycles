@@ -27,11 +27,10 @@ def insert(cyc, config):
                                  password=config.dbpass,
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
-    # print("%s.%s.%s" % (CONFIG.dbhost, CONFIG.db, CONFIG.collection))
     if cyc.stoptime is not None and cyc.starttime is not None:
         try:
             with connection.cursor() as cursor:
-                sql = ("INSERT INTO `CUT_CYCLES_TIMES` "
+                sql = ("INSERT INTO `CUT_CYCLE_TIMES` "
                        "(`MACHNUM`, `PARTID`, `PROGRAM`, `JOB`, "
                        "`QTY`, `STARTTIME`, `STOPTIME`, `SETUP`) VALUES "
                        "(%s, %s, %s, %s, %s, %s, %s, %s)")
