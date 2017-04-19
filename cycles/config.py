@@ -51,4 +51,4 @@ def config():
             print(e,)
             exit(1)
     else:
-        raise PermissionError('Cannot access /etc/cycles')
+        raise PermissionError('Cannot access "%s"' % config_file)
