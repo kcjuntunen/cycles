@@ -152,18 +152,22 @@ class Cycle(object):
             self._schedule.run(False)
 
     def schedule_stopfuncs(self):
-        for func in self._stopfunctions:
-            self._schedule.enter(self._wait, 1, func, (self,))
+        if self._stopfunctions is not None:
+            for func in self._stopfunctions:
+                print("scheduling %s" % (func,))
+                self._schedule.enter(self._wait, 1, func, (self, ))
 
     def cancel_stopfuncs(self):
         for event in self._schedule.queue:
+            print("Cancelling %s" % (event,))
             self._schedule.cancel(event)
 
     def register_stopfunc(self, func):
         """
         Functions to execute when data is complete.
         """
-        self._schedule.enter(self._wait, 1, func, (self,))
+        # import pdb; pdb.set_trace()
+        self._schedule.enter(self._wait, 1, func, (self, ))
         if self._stopfunctions is None:
             self._stopfunctions = [func]
         else:

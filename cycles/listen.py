@@ -95,14 +95,15 @@ class InputDeviceDispatcher(file_dispatcher):
         global SetupMode
         global CurrentProg
         reading = recv_scanner(self.device)
-        if reading == "%EOS%":
+        print(reading)
+        if reading == "OS%":
             SetupMode = False
             SETUP.stop()
         else:
             SetupMode = True
             CurrentProg = reading
             SETUP = MachineSetup(reading)
-            SETUP._wait = CONFIG.wait
+            SETUP._wait = 0
             CYCLES = Cycles(SETUP)
             SETUP.register_stopfunc(insert_and_remove)
 
@@ -117,6 +118,7 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
+    print("Inserting %s" % (cyc, ))
     mysql.insert(cyc, CONFIG)
     CYCLES.remove(cyc)
 
@@ -138,6 +140,7 @@ def serial_loop(ser):
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
+        print(line)
         if CYCLE.raw_string != SETUP.raw_string:
             CYCLE = Cycle(CurrentProg)
             CYCLE._wait = CONFIG.wait
