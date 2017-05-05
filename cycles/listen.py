@@ -30,8 +30,10 @@ from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
 SETUP = MachineSetup('No program')
-SETUP.start()
-CYCLE = Cycle('STUB')
+SetupMode = False
+SETUP.stop()
+CurrentProg = SETUP.raw_string
+CYCLE = Cycle(SETUP.raw_string)
 CYCLES = Cycles(SETUP)
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
@@ -88,13 +90,30 @@ class InputDeviceDispatcher(file_dispatcher):
         return self.device.read()
 
     def handle_read(self):
-        # print("handle scanner")
         global CYCLES
         global SETUP
-        SETUP = MachineSetup(recv_scanner(self.device))
-        CYCLES = Cycles(SETUP)
-        SETUP.register_stopfunc(insert_and_remove)
-        # print("scan -> %s" % (CYCLES))
+        global SetupMode
+        global CurrentProg
+        reading = recv_scanner(self.device)
+        if reading == "%EOS%":
+            SetupMode = False
+            SETUP.stop()
+        else:
+            SetupMode = True
+            CurrentProg = reading
+            SETUP = MachineSetup(reading)
+            SETUP._wait = CONFIG.wait
+            CYCLES = Cycles(SETUP)
+            SETUP.register_stopfunc(insert_and_remove)
+
+    # def handle_read2(self):
+    #     # print("handle scanner")
+    #     global CYCLES
+    #     global SETUP
+    #     SETUP = MachineSetup(recv_scanner(self.device))
+    #     CYCLES = Cycles(SETUP)
+    #     SETUP.register_stopfunc(insert_and_remove)
+    #     # print("scan -> %s" % (CYCLES))
 
 
 def insert_and_remove(cyc):
@@ -114,12 +133,14 @@ class SerialThread(Thread):
 def serial_loop(ser):
     # print('serial started')
     global CYCLE
+    global CurrentProg
     while True:
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
         if CYCLE.raw_string != SETUP.raw_string:
-            CYCLE = Cycle(SETUP.raw_string)
+            CYCLE = Cycle(CurrentProg)
+            CYCLE._wait = CONFIG.wait
             CYCLE.register_stopfunc(insert_and_remove)
         if SETUP.stoptime is None:
             SETUP.stop()
@@ -208,8 +229,7 @@ def main():
     try:
         os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(
-            get_device(['WIT 122-UFS',
-                        'Barcode Reader', ])))
+            get_device(CONFIG.scanners)))
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
         t.daemon = True
