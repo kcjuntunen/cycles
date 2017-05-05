@@ -43,7 +43,7 @@ def config():
                                 # config.get('Serial', 'port'),
                                 glob('/dev/tty[AU]*')[0],
                                 config.get('Serial', 'baud'),
-                                config.get('Serial', 'wait'),
+                                float(config.get('Serial', 'wait')),
                                 config.get('Serial', 'scanners').split(';'),)
                 return CONFIG
         except IndexError:
