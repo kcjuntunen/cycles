@@ -24,7 +24,7 @@ from collections import namedtuple
 from glob import glob
 
 Config = namedtuple('Config', 'dbhost dbuser dbpass dbport '
-                    'db serialport serialbaud')
+                    'db serialport serialbaud wait scanners')
 
 
 def config():
@@ -40,9 +40,11 @@ def config():
                                 config.get('Database', 'pwd'),
                                 config.get('Database', 'port'),
                                 config.get('Database', 'db'),
-                                #config.get('Serial', 'port'),
+                                # config.get('Serial', 'port'),
                                 glob('/dev/tty[AU]*')[0],
-                                config.get('Serial', 'baud'))
+                                config.get('Serial', 'baud'),
+                                config.get('Serial', 'wait'),
+                                config.get('Serial', 'scanners').split(';'),)
                 return CONFIG
         except IndexError:
             print("Serial port not found.")
