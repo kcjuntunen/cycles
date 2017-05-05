@@ -18,6 +18,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 import socket
+import time
+import sched
 from datetime import datetime
 from collections import namedtuple
 from json import loads, dumps
@@ -47,6 +49,8 @@ class Cycle(object):
         self._starttime = None
         self._stoptime = None
         self._stopfunctions = None
+        self._wait = 0
+        self._schedule = sched.scheduler(time.time, time.sleep)
 
     def __iter__(self):
         for i in [['display_name', self.display_name],
@@ -131,8 +135,11 @@ class Cycle(object):
         """
         Store a start time.
         """
-        self._starttime = datetime.utcnow()
+        if self.starttime is None:
+            self._starttime = datetime.utcnow()
         self._stoptime = None
+        self.cancel_stopfuncs()
+        self.schedule_stopfuncs()
 
     def stop(self):
         """
@@ -142,13 +149,21 @@ class Cycle(object):
             self._stoptime = datetime.utcnow()
 
         if self._stopfunctions is not None and len(self._stopfunctions) > 0:
-            for func in self._stopfunctions:
-                func(self)
+            self._schedule.run(False)
+
+    def schedule_stopfuncs(self):
+        for func in self._stopfunctions:
+            self._schedule.enter(self._wait, 1, func, (self,))
+
+    def cancel_stopfuncs(self):
+        for event in self._schedule.queue:
+            self._schedule.cancel(event)
 
     def register_stopfunc(self, func):
         """
         Functions to execute when data is complete.
         """
+        self._schedule.enter(self._wait, 1, func, (self,))
         if self._stopfunctions is None:
             self._stopfunctions = [func]
         else:
