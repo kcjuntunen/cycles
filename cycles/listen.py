@@ -99,7 +99,7 @@ class InputDeviceDispatcher(file_dispatcher):
         global CurrentProg
         reading = recv_scanner(self.device)
         print(reading)
-        if reading == "OS%" and SetupMode:
+        if reading == "%EOS%" and SetupMode:
             SetupMode = False
             SETUP.stop()
             SETUP.execute_stopfuncs()
