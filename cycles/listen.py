@@ -21,6 +21,7 @@ import os
 from asyncore import file_dispatcher, loop
 from serial import Serial
 from threading import Thread
+from datetime import datetime
 import evdev
 from cycles import config
 from cycles import mysql
@@ -35,6 +36,8 @@ SETUP.stop()
 CurrentProg = SETUP.raw_string
 CYCLE = Cycle(SETUP.raw_string)
 CYCLES = Cycles(SETUP)
+lastStop = datetime.utcnow()
+print("lastStop: %s" % lastStop)
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
     0x02: '1', 0x03: '2', 0x04: '3', 0x05: '4', 0x06: '5',
@@ -96,9 +99,10 @@ class InputDeviceDispatcher(file_dispatcher):
         global CurrentProg
         reading = recv_scanner(self.device)
         print(reading)
-        if reading == "OS%":
+        if reading == "OS%" and SetupMode:
             SetupMode = False
             SETUP.stop()
+            SETUP.execute_stopfuncs()
         else:
             SetupMode = True
             CurrentProg = reading
@@ -140,14 +144,22 @@ def serial_loop(ser):
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
-        print(line)
-        if CYCLE.raw_string != SETUP.raw_string:
-            CYCLE = Cycle(CurrentProg)
-            CYCLE._wait = CONFIG.wait
-            CYCLE.register_stopfunc(insert_and_remove)
-        if SETUP.stoptime is None:
-            SETUP.stop()
-        CYCLE.process_event(line)
+        global lastStop
+        if not SetupMode:
+            if "start" in line:
+                dt = datetime.utcnow()
+                if (dt - lastStop).seconds < CONFIG.wait:
+                    pass
+                else:
+                    CYCLE.execute_stopfuncs()
+                    CYCLE = Cycle(CurrentProg)
+                    CYCLE.process_event(line)
+                    CYCLE.register_stopfunc(insert_and_remove)
+            if "stop" in line:
+                CYCLE.process_event(line)
+                lastStop = datetime.utcnow()
+        else:
+            pass
 
 
 def devlist():
@@ -243,6 +255,8 @@ def main():
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
         t.join()
+        if CYCLE.starttime is not None and CYCLE.stoptime is not None:
+            CYCLE.execute_stopfuncs()
         print('KeyboardInterrupt')
     finally:
         os.system('stty echo')
