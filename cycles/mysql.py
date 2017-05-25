@@ -42,7 +42,28 @@ def insert(cyc, config):
         finally:
             connection.close()
 
+
 def log(entry, config):
+    """
+    Insert log data into MySQL DB.
+    """
+    connection = pymysql.connect(host=config.dbhost,
+                                 user=config.dbuser,
+                                 password=config.dbpass,
+                                 db=config.db,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
+                   "(TS, EVENT) VALUES "
+                   "(NOW(), %s)")
+            cursor.execute(sql, entry)
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def log_err(entry, config):
     """
     Insert log data into MySQL DB.
     """
