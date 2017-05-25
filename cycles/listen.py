@@ -103,6 +103,8 @@ class InputDeviceDispatcher(file_dispatcher):
             SetupMode = False
             SETUP.stop()
             SETUP.execute_stopfuncs()
+        elif '%' in reading:
+            pass
         else:
             SetupMode = True
             CurrentProg = reading
@@ -144,6 +146,7 @@ def serial_loop(ser):
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
+        print(line)
         global lastStop
         if not SetupMode:
             if "start" in line:
@@ -242,7 +245,7 @@ def main():
     Main loop.
     """
     try:
-        os.system('stty -echo')
+        # os.system('stty -echo')
         InputDeviceDispatcher(evdev.InputDevice(
             get_device(CONFIG.scanners)))
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
@@ -259,7 +262,7 @@ def main():
             CYCLE.execute_stopfuncs()
         print('KeyboardInterrupt')
     finally:
-        os.system('stty echo')
+        # os.system('stty echo')
         print('Exiting...')
 
     exit(0)
