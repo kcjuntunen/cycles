@@ -107,6 +107,9 @@ class InputDeviceDispatcher(file_dispatcher):
         elif '%' in reading:
             pass
         else:
+            if CYCLE.starttime is not None:
+                CYCLE.stop()
+                CYCLE.execute_stopfuncs()
             SetupMode = True
             CurrentProg = reading
             SETUP = MachineSetup(reading)
