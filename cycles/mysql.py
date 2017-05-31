@@ -19,6 +19,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import pymysql.cursors
+import socket
+
+
+HOSTNAME = socket.getfqdn().split()[0]
 
 
 def insert(cyc, config):
@@ -55,9 +59,9 @@ def log(entry, config):
     try:
         with connection.cursor() as cursor:
             sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
-                   "(TS, EVENT) VALUES "
-                   "(NOW(), %s)")
-            cursor.execute(sql, entry)
+                   "(TS, EVENT, MACHINE) VALUES "
+                   "(UTC_TIMESTAMP(), %s, %s)")
+            cursor.execute(sql, (entry, HOSTNAME,))
         connection.commit()
     finally:
         connection.close()
