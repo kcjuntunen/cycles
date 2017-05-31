@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
-import os
 from asyncore import file_dispatcher, loop
 from serial import Serial
 from threading import Thread
@@ -30,10 +29,16 @@ from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
-SETUP = MachineSetup('No program')
+
+try:
+    CurrentProg
+except NameError:
+    CurrentProg = 'No program'
+
+SETUP = MachineSetup(CurrentProg)
 SetupMode = False
 SETUP.stop()
-CurrentProg = SETUP.raw_string
+
 CYCLE = Cycle(SETUP.raw_string)
 CYCLES = Cycles(SETUP)
 lastStop = datetime.utcnow()
@@ -99,7 +104,7 @@ class InputDeviceDispatcher(file_dispatcher):
         global CurrentProg
         reading = recv_scanner(self.device)
         print(reading)
-        mysql.log((reading,), CONFIG)
+        mysql.log(reading, CONFIG)
         if reading == "%EOS%" and SetupMode:
             SetupMode = False
             SETUP.stop()
@@ -130,7 +135,7 @@ class InputDeviceDispatcher(file_dispatcher):
 def insert_and_remove(cyc):
     msg = "Inserting %s" % (cyc, )
     print(msg)
-    mysql.log((msg,), CONFIG)
+    mysql.log(msg, CONFIG)
     mysql.insert(cyc, CONFIG)
     CYCLES.remove(cyc)
 
@@ -153,7 +158,7 @@ def serial_loop(ser):
             exit(0)
         line = ser.readline().decode('utf-8').strip()
         print(line)
-        mysql.log((line,), CONFIG)
+        mysql.log(line, CONFIG)
         global lastStop
         if not SetupMode:
             if "start" in line:
@@ -253,15 +258,27 @@ def main():
     """
     try:
         # os.system('stty -echo')
-        InputDeviceDispatcher(evdev.InputDevice(
-            get_device(CONFIG.scanners)))
+        global CurrentProg
+        CurrentProg = None
+
+        try:
+            InputDeviceDispatcher(evdev.InputDevice(
+                get_device(CONFIG.scanners)))
+        except Exception as ex:
+            print(ex)
+            CurrentProg = 'No scanner'
+
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
         t.daemon = True
         t.start()
 
         # SerialDispatcher(ser)
-        loop()
+        if CurrentProg is None:
+            loop()
+        else:
+            while True:
+                pass
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
         t.join()
