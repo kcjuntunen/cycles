@@ -112,8 +112,7 @@ class InputDeviceDispatcher(file_dispatcher):
         elif '%' in reading:
             pass
         else:
-            if CYCLE.starttime is not None:
-                CYCLE.stop()
+            if CYCLE.starttime is not None and CYCLE.stoptime is not None:
                 CYCLE.execute_stopfuncs()
             SetupMode = True
             CurrentProg = reading
