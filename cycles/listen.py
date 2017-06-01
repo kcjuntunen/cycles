@@ -41,8 +41,10 @@ SETUP.stop()
 
 CYCLE = Cycle(SETUP.raw_string)
 CYCLES = Cycles(SETUP)
+
+newStart = False
 lastStop = datetime.utcnow()
-print("lastStop: %s" % lastStop)
+
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
     0x02: '1', 0x03: '2', 0x04: '3', 0x05: '4', 0x06: '5',
@@ -152,19 +154,22 @@ def serial_loop(ser):
     # print('serial started')
     global CYCLE
     global CurrentProg
+    global lastStop
+    global newStart
     while True:
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
-        print(line)
+        print('%s: %s' % (datetime.utcnow(), line,))
         mysql.log(line, CONFIG)
-        global lastStop
         if not SetupMode:
             if "start" in line:
                 dt = datetime.utcnow()
                 if (dt - lastStop).seconds < CONFIG.wait:
+                    newStart = True
                     pass
                 else:
+                    newStart = False
                     CYCLE.execute_stopfuncs()
                     CYCLE = Cycle(CurrentProg)
                     CYCLE.process_event(line)
@@ -172,8 +177,25 @@ def serial_loop(ser):
             if "stop" in line:
                 CYCLE.process_event(line)
                 lastStop = datetime.utcnow()
+                newStart = False
         else:
             pass
+
+
+class ExpireThread(Thread):
+    def run(self):
+        expire_cycle()
+
+
+def expire_cycle():
+    global lastStop
+    global CYCLE
+    while True:
+        if CYCLE.starttime is not None and CYCLE.stoptime is not None:
+            dt = datetime.utcnow()
+            if not newStart and (dt - lastStop).seconds > CONFIG.wait:
+                CYCLE.execute_stopfuncs()
+                CYCLE = Cycle(CurrentProg)
 
 
 def devlist():
@@ -257,10 +279,6 @@ def main():
     Main loop.
     """
     try:
-        # os.system('stty -echo')
-        #global CurrentProg
-        #CurrentProg = None
-
         try:
             InputDeviceDispatcher(evdev.InputDevice(
                 get_device(CONFIG.scanners)))
@@ -273,22 +291,21 @@ def main():
         t.daemon = True
         t.start()
 
-        # SerialDispatcher(ser)
-        #if CurrentProg is None:
+        et = ExpireThread()
+        et.daemon = True
+        et.start()
+
         mysql.log('Monitor started', CONFIG)
         loop()
-        # else:
-        #     mysql.log('Monitor started without scanner', CONFIG)
-        #     while True:
-        #         pass
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
         t.join()
         if CYCLE.starttime is not None and CYCLE.stoptime is not None:
             CYCLE.execute_stopfuncs()
+        mysql.log('Keyboard Interrupt', CONFIG)
         print('KeyboardInterrupt')
     finally:
-        # os.system('stty echo')
+        mysql.log('Exiting', CONFIG)
         print('Exiting...')
 
     exit(0)
