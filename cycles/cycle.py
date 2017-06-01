@@ -43,8 +43,11 @@ class Cycle(object):
         self._partID = '0'
         self._job = 'Unknown'
         self._qty = '1'
-        if '$' in self._raw:
-            self._program, self._qty, self._partID = self._raw.split('$')
+        try:
+            if '$' in self._raw:
+                self._program, self._qty, self._partID = self._raw.split('$')
+        except TypeError as te:
+            self._raw = 'Bad input'
 
         self._starttime = None
         self._stoptime = None
