@@ -258,15 +258,15 @@ def main():
     """
     try:
         # os.system('stty -echo')
-        global CurrentProg
-        CurrentProg = None
+        #global CurrentProg
+        #CurrentProg = None
 
         try:
             InputDeviceDispatcher(evdev.InputDevice(
                 get_device(CONFIG.scanners)))
         except Exception as ex:
             print(ex)
-            CurrentProg = 'No scanner'
+            exit(-1)
 
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
@@ -274,13 +274,13 @@ def main():
         t.start()
 
         # SerialDispatcher(ser)
-        if CurrentProg is None:
-            mysql.log('Monitor started', CONFIG)
-            loop()
-        else:
-            mysql.log('Monitor started without scanner', CONFIG)
-            while True:
-                pass
+        #if CurrentProg is None:
+        mysql.log('Monitor started', CONFIG)
+        loop()
+        # else:
+        #     mysql.log('Monitor started without scanner', CONFIG)
+        #     while True:
+        #         pass
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
         t.join()
