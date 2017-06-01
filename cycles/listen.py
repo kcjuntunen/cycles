@@ -203,6 +203,7 @@ def get_device(device_names):
     for name in device_names:
         for dev in device_list:
             if name in dev.name:
+                mysql.log('Found %s' % (dev.fn,), CONFIG)
                 return dev.fn
 
 
@@ -274,8 +275,10 @@ def main():
 
         # SerialDispatcher(ser)
         if CurrentProg is None:
+            mysql.log('Monitor started', CONFIG)
             loop()
         else:
+            mysql.log('Monitor started without scanner', CONFIG)
             while True:
                 pass
     except KeyboardInterrupt:
