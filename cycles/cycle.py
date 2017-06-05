@@ -54,6 +54,7 @@ class Cycle(object):
         self._stopfunctions = None
         self._stopfuncsexeced = False
         self._wait = 0
+        self._ignore = 5
         self._schedule = sched.scheduler(time.time, time.sleep)
 
     def __iter__(self):
@@ -153,10 +154,12 @@ class Cycle(object):
         # self.execute_stopfuncs()
 
     def execute_stopfuncs(self):
+        diff = self._starttime - self._stoptime
         if self._stopfunctions is not None and not self._stopfuncsexeced:
             self._stopfuncsexeced = True
             for func in self._stopfunctions:
-                func(self)
+                if diff.seconds > self._ignore:
+                    func(self)
 
     def schedule_stopfuncs(self):
         if self._stopfunctions is not None:
