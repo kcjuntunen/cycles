@@ -52,6 +52,7 @@ class Cycle(object):
         self._starttime = None
         self._stoptime = None
         self._stopfunctions = None
+        self._stopfuncsexeced = False
         self._wait = 0
         self._schedule = sched.scheduler(time.time, time.sleep)
 
@@ -152,7 +153,8 @@ class Cycle(object):
         # self.execute_stopfuncs()
 
     def execute_stopfuncs(self):
-        if self._stopfunctions is not None:
+        if self._stopfunctions is not None and not self._stopfuncsexeced:
+            self._stopfuncsexeced = True
             for func in self._stopfunctions:
                 func(self)
 
