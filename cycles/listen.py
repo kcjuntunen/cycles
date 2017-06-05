@@ -172,6 +172,7 @@ def serial_loop(ser):
                     newStart = False
                     CYCLE.execute_stopfuncs()
                     CYCLE = Cycle(CurrentProg)
+                    CYCLE._ignore = CONFIG.ignore
                     CYCLE.process_event(line)
                     CYCLE.register_stopfunc(insert_and_remove)
             if "stop" in line:
