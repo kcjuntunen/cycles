@@ -154,12 +154,10 @@ class Cycle(object):
         # self.execute_stopfuncs()
 
     def execute_stopfuncs(self):
-        diff = self._stoptime - self._starttime
         if self._stopfunctions is not None and not self._stopfuncsexeced:
             self._stopfuncsexeced = True
             for func in self._stopfunctions:
-                if diff.seconds > self._ignore:
-                    func(self)
+                func(self)
 
     def schedule_stopfuncs(self):
         if self._stopfunctions is not None:

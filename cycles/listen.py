@@ -134,11 +134,20 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
-    msg = "Inserting %s" % (cyc, )
-    print(msg)
-    mysql.log(msg, CONFIG)
-    mysql.insert(cyc, CONFIG)
-    CYCLES.remove(cyc)
+    diff = cyc.diff().seconds
+    if diff is None:
+        diff = 0
+    if diff > CONFIG.ignore:
+        msg = "Inserting %s" % (cyc, )
+        print(msg)
+        mysql.log(msg, CONFIG)
+        mysql.insert(cyc, CONFIG)
+        CYCLES.remove(cyc)
+    else:
+        msg = "Cycle too short. Ignoring (%s)" % (cyc,)
+        print(msg)
+        mysql.log(msg, CONFIG)
+        CYCLES.remove(cyc)
 
 
 class SerialThread(Thread):
