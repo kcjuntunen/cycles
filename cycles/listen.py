@@ -30,7 +30,7 @@ from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
 mysql.log("Ignoring cycles less than %s seconds, and gaps shorter than %s "
-          "seconds." % (CONFIG.ignore, CONFIG.wait,))
+          "seconds." % (CONFIG.ignore, CONFIG.wait,), CONFIG)
 try:
     CurrentProg
 except NameError:
