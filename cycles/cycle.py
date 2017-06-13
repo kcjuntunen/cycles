@@ -140,6 +140,7 @@ class Cycle(object):
         """
         Store a start time.
         """
+        self._stopfuncsexeced = False
         if self.starttime is None:
             self._starttime = datetime.utcnow()
         self._stoptime = None
@@ -148,6 +149,7 @@ class Cycle(object):
         """
         Store a stop time. Ignore if self._starttime isn't populated.
         """
+        self._stopfuncsexeced = False
         if self._starttime is not None:
             self._stoptime = datetime.utcnow()
 
