@@ -29,7 +29,8 @@ from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
-
+mysql.log("Ignoring cycles less than %s seconds, and gaps shorter than %s "
+          "seconds." % (CONFIG.ignore, CONFIG.wait,))
 try:
     CurrentProg
 except NameError:
@@ -206,6 +207,7 @@ def expire_cycle():
             if not newStart and (dt - lastStop).seconds > CONFIG.wait:
                 CYCLE.execute_stopfuncs()
                 CYCLE = Cycle(CurrentProg)
+                CYCLE._ignore = CONFIG.ignore
 
 
 def devlist():
