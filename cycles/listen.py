@@ -201,12 +201,12 @@ class ExpireThread(Thread):
 def expire_cycle():
     global lastStop
     global CYCLE
+    global newStart
     while True:
         if CYCLE.starttime is not None and CYCLE.stoptime is not None:
             dt = datetime.utcnow()
             if not newStart and (dt - lastStop).seconds > CONFIG.wait:
                 CYCLE.execute_stopfuncs()
-                CYCLE = Cycle(CurrentProg)
                 CYCLE._ignore = CONFIG.ignore
 
 
@@ -237,7 +237,7 @@ def get_device(device_names):
     for name in device_names:
         for dev in device_list:
             if name in dev.name:
-                mysql.log('Found %s' % (dev.fn,), CONFIG)
+                mysql.log('Found "%s"' % (name,), CONFIG)
                 return dev.fn
 
 
