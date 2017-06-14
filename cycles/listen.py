@@ -144,11 +144,15 @@ def insert_and_remove(cyc):
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
+        cyc = Cycle(CurrentProg)
+        cyc._ignore = CONFIG.ignore
     else:
         msg = "Cycle too short. Ignoring (%s)" % (cyc,)
         print(msg)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
+        cyc = Cycle(CurrentProg)
+        cyc._ignore = CONFIG.ignore
 
 
 class SerialThread(Thread):
