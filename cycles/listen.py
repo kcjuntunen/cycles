@@ -144,6 +144,8 @@ def insert_and_remove(cyc):
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
+        cyc._starttime = None
+        cyc._stoptime = None
         cyc = Cycle(CurrentProg)
         cyc._ignore = CONFIG.ignore
     else:
@@ -151,6 +153,8 @@ def insert_and_remove(cyc):
         print(msg)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
+        cyc._starttime = None
+        cyc._stoptime = None
         cyc = Cycle(CurrentProg)
         cyc._ignore = CONFIG.ignore
 
