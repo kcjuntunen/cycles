@@ -180,25 +180,23 @@ def serial_loop(ser):
         line = ser.readline().decode('utf-8').strip()
         print('%s: %s' % (datetime.utcnow(), line,))
         mysql.log(line, CONFIG)
-        if not SetupMode:
-            if "start" in line:
-                dt = datetime.utcnow()
-                if (dt - lastStop).seconds < CONFIG.wait:
-                    newStart = True
-                    pass
-                else:
-                    newStart = False
-                    CYCLE.execute_stopfuncs()
-                    CYCLE = Cycle(CurrentProg)
-                    CYCLE._ignore = CONFIG.ignore
-                    CYCLE.process_event(line)
-                    CYCLE.register_stopfunc(insert_and_remove)
-            if "stop" in line:
-                CYCLE.process_event(line)
-                lastStop = datetime.utcnow()
+
+        if "start" in line:
+            dt = datetime.utcnow()
+            if (dt - lastStop).seconds < CONFIG.wait:
+                newStart = True
+                pass
+            else:
                 newStart = False
-        else:
-            pass
+                CYCLE.execute_stopfuncs()
+                CYCLE = Cycle(CurrentProg)
+                CYCLE._ignore = CONFIG.ignore
+                CYCLE.process_event(line)
+                CYCLE.register_stopfunc(insert_and_remove)
+        if "stop" in line:
+            CYCLE.process_event(line)
+            lastStop = datetime.utcnow()
+            newStart = False
 
 
 class ExpireThread(Thread):
