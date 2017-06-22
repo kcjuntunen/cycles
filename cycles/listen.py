@@ -139,7 +139,7 @@ def insert_and_remove(cyc):
     if diff is None:
         diff = 0
     if diff > CONFIG.ignore:
-        msg = "Inserting %s" % (cyc, )
+        msg = "Inserting (%s)" % (cyc, )
         print(msg)
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
