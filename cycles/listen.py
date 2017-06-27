@@ -135,9 +135,9 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
-    diff = cyc.diff().seconds
-    if diff is None:
-        diff = 0
+    diff = 0
+    if diff is not None:
+        cyc.diff().seconds
     if diff > CONFIG.ignore:
         msg = "Inserting (%s)" % (cyc, )
         print(msg)
