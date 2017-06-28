@@ -137,15 +137,13 @@ class InputDeviceDispatcher(file_dispatcher):
 def insert_and_remove(cyc):
     diff = 0
     if cyc.diff() is not None:
-        cyc.diff().seconds
+        diff = cyc.diff().seconds
     if diff > CONFIG.ignore:
         msg = "Inserting (%s)" % (cyc, )
         print(msg)
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
-        cyc._starttime = None
-        cyc._stoptime = None
         cyc = Cycle(CurrentProg)
         cyc._ignore = CONFIG.ignore
     else:
@@ -153,8 +151,6 @@ def insert_and_remove(cyc):
         print(msg)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
-        cyc._starttime = None
-        cyc._stoptime = None
         cyc = Cycle(CurrentProg)
         cyc._ignore = CONFIG.ignore
 
@@ -187,6 +183,7 @@ def serial_loop(ser):
                 newStart = True
                 pass
             else:
+                mysql.log('Creating new cycle @ %s' % (dt,))
                 newStart = False
                 CYCLE.execute_stopfuncs()
                 CYCLE = Cycle(CurrentProg)
@@ -294,6 +291,7 @@ def recv_serial(device):
 
 def main():
     """
+
     Main loop.
     """
     try:
@@ -313,7 +311,7 @@ def main():
         et.daemon = True
         et.start()
 
-        mysql.log('Monitor started', CONFIG)
+        mysql.log('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
         loop()
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
