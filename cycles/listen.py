@@ -140,7 +140,6 @@ def insert_and_remove(cyc):
         diff = cyc.diff().seconds
     if diff > CONFIG.ignore:
         msg = "Inserting (%s)" % (cyc, )
-        print(msg)
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
@@ -148,7 +147,6 @@ def insert_and_remove(cyc):
         cyc._ignore = CONFIG.ignore
     else:
         msg = "Cycle too short. Ignoring (%s)" % (cyc,)
-        print(msg)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
         cyc = Cycle(CurrentProg)
@@ -174,7 +172,6 @@ def serial_loop(ser):
         if POLL_ARGS["comm"] == "stop":
             exit(0)
         line = ser.readline().decode('utf-8').strip()
-        print('%s: %s' % (datetime.utcnow(), line,))
         mysql.log(line, CONFIG)
 
         if "start" in line:
@@ -188,10 +185,12 @@ def serial_loop(ser):
                 CYCLE.execute_stopfuncs()
                 CYCLE = Cycle(CurrentProg)
                 CYCLE._ignore = CONFIG.ignore
-                CYCLE.process_event(line)
+                # CYCLE.process_event(line)
+                CYCLE.start()
                 CYCLE.register_stopfunc(insert_and_remove)
         if "stop" in line:
-            CYCLE.process_event(line)
+            # CYCLE.process_event(line)
+            CYCLE.stop()
             lastStop = datetime.utcnow()
             newStart = False
 
@@ -299,7 +298,7 @@ def main():
             InputDeviceDispatcher(evdev.InputDevice(
                 get_device(CONFIG.scanners)))
         except Exception as ex:
-            print(ex)
+            mysql.log(ex, CONFIG)
             exit(-1)
 
         ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
@@ -319,10 +318,8 @@ def main():
         if CYCLE.starttime is not None and CYCLE.stoptime is not None:
             CYCLE.execute_stopfuncs()
         mysql.log('Keyboard Interrupt', CONFIG)
-        print('KeyboardInterrupt')
     finally:
         mysql.log('Exiting', CONFIG)
-        print('Exiting...')
 
     exit(0)
 

@@ -63,6 +63,7 @@ def log(entry, config):
                    "(UTC_TIMESTAMP(), %s, %s)")
             cursor.execute(sql, (entry, HOSTNAME,))
         connection.commit()
+        print(entry)
     finally:
         connection.close()
 
