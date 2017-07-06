@@ -179,15 +179,14 @@ def serial_loop(ser):
             if (dt - lastStop).seconds < CONFIG.wait:
                 newStart = True
                 pass
-            else:
-                mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
-                newStart = False
-                CYCLE.execute_stopfuncs()
-                CYCLE = Cycle(CurrentProg)
-                CYCLE._ignore = CONFIG.ignore
-                # CYCLE.process_event(line)
-                CYCLE.start()
-                CYCLE.register_stopfunc(insert_and_remove)
+            mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
+            newStart = False
+            CYCLE.execute_stopfuncs()
+            CYCLE = Cycle(CurrentProg)
+            CYCLE._ignore = CONFIG.ignore
+            # CYCLE.process_event(line)
+            CYCLE.start()
+            CYCLE.register_stopfunc(insert_and_remove)
         if "stop" in line:
             # CYCLE.process_event(line)
             CYCLE.stop()
