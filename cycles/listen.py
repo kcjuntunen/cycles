@@ -178,7 +178,7 @@ def serial_loop(ser):
             dt = datetime.utcnow()
             if (dt - lastStop).seconds < CONFIG.wait:
                 newStart = True
-                pass
+                continue
             mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
             newStart = False
             CYCLE.execute_stopfuncs()
