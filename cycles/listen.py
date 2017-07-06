@@ -183,6 +183,7 @@ def serial_loop(ser):
             newStart = False
             CYCLE.execute_stopfuncs()
             CYCLE = Cycle(CurrentProg)
+            CYCLE._stopfuncsexeced = False
             CYCLE._ignore = CONFIG.ignore
             # CYCLE.process_event(line)
             CYCLE.start()
