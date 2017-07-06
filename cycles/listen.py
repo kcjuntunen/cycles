@@ -180,7 +180,7 @@ def serial_loop(ser):
                 newStart = True
                 pass
             else:
-                mysql.log('Creating new cycle @ %s' % (dt,))
+                mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
                 newStart = False
                 CYCLE.execute_stopfuncs()
                 CYCLE = Cycle(CurrentProg)
