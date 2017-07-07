@@ -53,6 +53,7 @@ class Cycle(object):
         self._stoptime = None
         self._stopfunctions = None
         self._stopfuncsexeced = False
+        self._lastUpdate = datetime.utcnow()
         self._wait = 0
         self._ignore = 5
         self._schedule = sched.scheduler(time.time, time.sleep)
@@ -142,7 +143,9 @@ class Cycle(object):
         """
         self._stopfuncsexeced = False
         if self.starttime is None:
-            self._starttime = datetime.utcnow()
+            dt = datetime.utcnow()
+            self._starttime = dt
+            self._lastUpdate = dt
         self._stoptime = None
 
     def stop(self):
@@ -151,7 +154,9 @@ class Cycle(object):
         """
         self._stopfuncsexeced = False
         if self._starttime is not None:
-            self._stoptime = datetime.utcnow()
+            dt = datetime.utcnow()
+            self._stoptime = dt
+            self._lastUpdate = dt
 
         # self.execute_stopfuncs()
 
@@ -259,3 +264,7 @@ class Cycle(object):
         Return the partID received upon instantiation.
         """
         return int(self._partID, 16)
+
+    @property
+    def LastUpdate(self):
+        return self._lastUpdate
