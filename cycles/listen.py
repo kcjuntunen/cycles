@@ -44,7 +44,6 @@ CYCLE = Cycle(SETUP.raw_string)
 CYCLES = Cycles(SETUP)
 
 newStart = False
-lastStop = datetime.utcnow()
 
 POLL_ARGS = {"comm": "go", }
 SCANCODES = {
@@ -143,14 +142,14 @@ def insert_and_remove(cyc):
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
-        cyc = Cycle(CurrentProg)
-        cyc._ignore = CONFIG.ignore
+        cyc._starttime = None
+        cyc._stoptime = None
     else:
         msg = "Cycle too short. Ignoring (%s)" % (cyc,)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
-        cyc = Cycle(CurrentProg)
-        cyc._ignore = CONFIG.ignore
+        cyc._starttime = None
+        cyc._stoptime = None
 
 
 class SerialThread(Thread):
@@ -166,7 +165,6 @@ def serial_loop(ser):
     # print('serial started')
     global CYCLE
     global CurrentProg
-    global lastStop
     global newStart
     while True:
         if POLL_ARGS["comm"] == "stop":
@@ -176,23 +174,26 @@ def serial_loop(ser):
 
         if "start" in line:
             dt = datetime.utcnow()
-            if (dt - lastStop).seconds < CONFIG.wait:
+            if ((dt - CYCLE.LastUpdate).seconds < CONFIG.wait and
+                    CYCLE.stoptime is not None):
                 newStart = True
                 continue
-            mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
-            newStart = False
-            CYCLE.execute_stopfuncs()
-            CYCLE = Cycle(CurrentProg)
-            CYCLE._stopfuncsexeced = False
-            CYCLE._ignore = CONFIG.ignore
-            # CYCLE.process_event(line)
-            CYCLE.start()
-            CYCLE.register_stopfunc(insert_and_remove)
+            if (CYCLE._stopfuncsexeced is True or
+                    CYCLE.starttime is None):
+                mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
+                newStart = False
+                CYCLE = Cycle(CurrentProg)
+                CYCLE._stopfuncsexeced = False
+                CYCLE._ignore = CONFIG.ignore
+                # CYCLE.process_event(line)
+                CYCLE.start()
+                CYCLE.register_stopfunc(insert_and_remove)
+                if CYCLE not in CYCLES:
+                    CYCLES.append(CYCLE)
         if "stop" in line:
             # CYCLE.process_event(line)
-            CYCLE.stop()
-            lastStop = datetime.utcnow()
             newStart = False
+            CYCLE.stop()
 
 
 class ExpireThread(Thread):
@@ -201,15 +202,19 @@ class ExpireThread(Thread):
 
 
 def expire_cycle():
-    global lastStop
     global CYCLE
     global newStart
     while True:
-        if CYCLE.starttime is not None and CYCLE.stoptime is not None:
-            dt = datetime.utcnow()
-            if not newStart and (dt - lastStop).seconds > CONFIG.wait:
-                CYCLE.execute_stopfuncs()
-                CYCLE._ignore = CONFIG.ignore
+        if POLL_ARGS["comm"] == "stop":
+            exit(0)
+        cyc = CYCLE
+        if cyc is not None:
+            if (cyc.starttime is not None and
+                    cyc.stoptime is not None):
+                dt = datetime.utcnow()
+                if (not newStart and
+                        abs(dt - cyc.LastUpdate).seconds > CONFIG.wait):
+                    cyc.execute_stopfuncs()
 
 
 def devlist():
