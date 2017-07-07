@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='Machine Cycles',
-      version='0.2',
+      version='0.5',
       description='Log machine cycle time',
       long_description='Log machine cycle time to mongodb',
       classifiers=[
