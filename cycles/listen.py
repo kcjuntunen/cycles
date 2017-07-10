@@ -29,9 +29,10 @@ from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
 CONFIG = config.config()
-mysql.log("Ignoring cycles shorter than %s seconds, longer than %s; and gaps "
-          "shorter than %s seconds." % (CONFIG.too_short, CONFIG.too_long,
-                                        CONFIG.wait,), CONFIG)
+mysql.log("Ignoring cycles shorter than %s seconds, longer than %s minutes; "
+          "and gaps shorter than %s seconds." % (CONFIG.too_short,
+                                                 CONFIG.too_long / 60,
+                                                 CONFIG.wait,), CONFIG)
 try:
     CurrentProg
 except NameError:
