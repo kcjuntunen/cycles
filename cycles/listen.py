@@ -135,17 +135,30 @@ class InputDeviceDispatcher(file_dispatcher):
 
 def insert_and_remove(cyc):
     diff = 0
+
     if cyc.diff() is not None:
         diff = cyc.diff().seconds
-    if diff > CONFIG.ignore:
+
+    too_short = diff < CONFIG.too_short
+    too_long = diff > CONFIG.too_long
+
+    if not too_short and not too_long:
         msg = "Inserting (%s)" % (cyc, )
         mysql.log(msg, CONFIG)
         mysql.insert(cyc, CONFIG)
         CYCLES.remove(cyc)
         cyc._starttime = None
         cyc._stoptime = None
-    else:
+
+    if too_short:
         msg = "Cycle too short. Ignoring (%s)" % (cyc,)
+        mysql.log(msg, CONFIG)
+        CYCLES.remove(cyc)
+        cyc._starttime = None
+        cyc._stoptime = None
+
+    if too_long:
+        msg = "Cycle too long. Ignoring (%s)" % (cyc,)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
         cyc._starttime = None
