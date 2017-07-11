@@ -43,6 +43,8 @@ def insert(cyc, config):
                        "(%s, %s, %s, %s, %s, %s, %s)")
                 cursor.execute(sql, cyc.data_set())
             connection.commit()
+        except:
+            print('Failed to log cycle: [%s]' % (cyc, ))
         finally:
             connection.close()
 
@@ -61,9 +63,11 @@ def log(entry, config):
             sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
                    "(TS, EVENT, MACHINE) VALUES "
                    "(UTC_TIMESTAMP(), %s, %s)")
-            cursor.execute(sql, (entry, HOSTNAME,))
+            cursor.execute(sql, (entry[0:1024], HOSTNAME,))
         connection.commit()
         print(entry)
+    except:
+        print('Failed to log event: [%s]' % (entry, ))
     finally:
         connection.close()
 
