@@ -58,12 +58,13 @@ def log(entry, config):
                                  password=config.dbpass,
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
+    filtered_entry = ''.join(c for c in entry if c.isprintable())
     try:
         with connection.cursor() as cursor:
             sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
                    "(TS, EVENT, MACHINE) VALUES "
                    "(UTC_TIMESTAMP(), %s, %s)")
-            cursor.execute(sql, (entry[0:1024], HOSTNAME,))
+            cursor.execute(sql, (filtered_entry[0:1024], HOSTNAME,))
         connection.commit()
         print(entry)
     except:
