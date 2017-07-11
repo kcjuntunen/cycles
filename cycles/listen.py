@@ -153,14 +153,14 @@ def insert_and_remove(cyc):
         cyc._stoptime = None
 
     if too_short:
-        msg = "Cycle too short. Ignoring (%s)" % (cyc,)
+        msg = "Cycle < %s seconds. Ignoring (%s)" % (CONFIG.too_short, cyc,)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
         cyc._starttime = None
         cyc._stoptime = None
 
     if too_long:
-        msg = "Cycle too long. Ignoring (%s)" % (cyc,)
+        msg = "Cycle > %s minutes. Ignoring (%s)" % (CONFIG.too_long, cyc,)
         mysql.log(msg, CONFIG)
         CYCLES.remove(cyc)
         cyc._starttime = None
