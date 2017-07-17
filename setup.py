@@ -1,8 +1,10 @@
 from setuptools import setup, find_packages
 
+
 def readme():
     with open('README.org') as f:
         return f.read()
+
 
 setup(name='Machine Cycles',
       version='0.5',
@@ -28,7 +30,8 @@ setup(name='Machine Cycles',
       ],
       include_package_data=True,
       zip_safe=False,
-      scripts=['bin/monitormachines.py'],
+      scripts=['bin/monitormachines.py',
+               'bin/update_monitor.sh', ],
       test_suite='nose.collector',
       tests_require=['nose'],
-)
+      )
