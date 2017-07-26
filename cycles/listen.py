@@ -28,11 +28,16 @@ from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
-CONFIG = config.config()
-mysql.log("Ignoring cycles shorter than %s seconds, longer than %s minutes; "
-          "and gaps shorter than %s seconds." % (CONFIG.too_short,
-                                                 CONFIG.too_long / 60,
-                                                 CONFIG.wait,), CONFIG)
+try:
+    CONFIG = config.config()
+    mysql.log("Ignoring cycles shorter than %s seconds, "
+              "longer than %s minutes; "
+              "and gaps shorter than %s seconds." % (CONFIG.too_short,
+                                                     CONFIG.too_long / 60,
+                                                     CONFIG.wait,), CONFIG)
+except Exception as e:
+    print('Failure loading config. (%s)' % (e,))
+
 try:
     CurrentProg
 except NameError:
