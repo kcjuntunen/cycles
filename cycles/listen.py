@@ -136,35 +136,38 @@ class InputDeviceDispatcher(file_dispatcher):
 
 
 def insert_and_remove(cyc):
-    diff = 0
+    try:
+        diff = 0
 
-    if cyc.diff() is not None:
-        diff = cyc.diff().seconds
+        if cyc.diff() is not None:
+            diff = cyc.diff().seconds
 
-    too_short = diff < CONFIG.too_short
-    too_long = diff > CONFIG.too_long
+        too_short = diff < CONFIG.too_short
+        too_long = diff > CONFIG.too_long
 
-    if not too_short and not too_long:
-        msg = "Inserting (%s)" % (cyc, )
-        mysql.log(msg, CONFIG)
-        mysql.insert(cyc, CONFIG)
-        CYCLES.remove(cyc)
-        cyc._starttime = None
-        cyc._stoptime = None
+        if not too_short and not too_long:
+            msg = "Inserting (%s)" % (cyc, )
+            mysql.log(msg, CONFIG)
+            mysql.insert(cyc, CONFIG)
+            CYCLES.remove(cyc)
+            cyc._starttime = None
+            cyc._stoptime = None
 
-    if too_short:
-        msg = "Cycle < %s seconds. Ignoring (%s)" % (CONFIG.too_short, cyc,)
-        mysql.log(msg, CONFIG)
-        CYCLES.remove(cyc)
-        cyc._starttime = None
-        cyc._stoptime = None
+        if too_short:
+            msg = "Cycle < %s seconds. Ignoring (%s)" % (CONFIG.too_short, cyc,)
+            mysql.log(msg, CONFIG)
+            CYCLES.remove(cyc)
+            cyc._starttime = None
+            cyc._stoptime = None
 
-    if too_long:
-        msg = "Cycle > %s minutes. Ignoring (%s)" % (CONFIG.too_long, cyc,)
-        mysql.log(msg, CONFIG)
-        CYCLES.remove(cyc)
-        cyc._starttime = None
-        cyc._stoptime = None
+        if too_long:
+            msg = "Cycle > %s minutes. Ignoring (%s)" % (CONFIG.too_long, cyc,)
+            mysql.log(msg, CONFIG)
+            CYCLES.remove(cyc)
+            cyc._starttime = None
+            cyc._stoptime = None
+    except Exception as e:
+        mysql.log('Failed insert. (%s)' % (e,), CONFIG)
 
 
 class SerialThread(Thread):
@@ -188,27 +191,33 @@ def serial_loop(ser):
         mysql.log(line, CONFIG)
 
         if "start" in line:
-            dt = datetime.utcnow()
-            if ((dt - CYCLE.LastUpdate).seconds < CONFIG.wait and
-                    CYCLE.stoptime is not None):
-                newStart = True
-                continue
-            if (CYCLE._stopfuncsexeced is True or
-                    CYCLE.starttime is None):
-                mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
-                newStart = False
-                CYCLE = Cycle(CurrentProg)
-                CYCLE._stopfuncsexeced = False
-                CYCLE._ignore = CONFIG.too_short
-                # CYCLE.process_event(line)
-                CYCLE.start()
-                CYCLE.register_stopfunc(insert_and_remove)
-                if CYCLE not in CYCLES:
-                    CYCLES.append(CYCLE)
+            try:
+                dt = datetime.utcnow()
+                if ((dt - CYCLE.LastUpdate).seconds < CONFIG.wait and
+                        CYCLE.stoptime is not None):
+                    newStart = True
+                    continue
+                if (CYCLE._stopfuncsexeced is True or
+                        CYCLE.starttime is None):
+                    mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
+                    newStart = False
+                    CYCLE = Cycle(CurrentProg)
+                    CYCLE._stopfuncsexeced = False
+                    CYCLE._ignore = CONFIG.too_short
+                    # CYCLE.process_event(line)
+                    CYCLE.start()
+                    CYCLE.register_stopfunc(insert_and_remove)
+                    if CYCLE not in CYCLES:
+                        CYCLES.append(CYCLE)
+            except Exception as e:
+                mysql.log('Failed start. (%s)' % (e,), CONFIG)
         if "stop" in line:
-            # CYCLE.process_event(line)
-            newStart = False
-            CYCLE.stop()
+            try:
+                # CYCLE.process_event(line)
+                newStart = False
+                CYCLE.stop()
+            except Exception as e:
+                mysql.log('Failed stop. (%s)' % (e,), CONFIG)
 
 
 class ExpireThread(Thread):
