@@ -36,18 +36,41 @@ def config():
             with open(config_file, 'r') as fh:
                 config = configparser.ConfigParser()
                 config.readfp(fh)
+
+                # Defaults
+                wait = 10
+                too_short = 7.55
+                too_long = 1800
+                port = glob('/dev/tty[AU]*')[0]
+                baud = 115200
+
+                if 'Limits' in config.sections():
+                    itms = (i[0] for i in config.items('Limits'))
+                    if 'wait' in itms:
+                        wait = config.get('Limits', 'wait')
+                    if 'short' in itms:
+                        too_short = config.getfloat('Limits', 'short')
+                    if 'long' in itms:
+                        too_long = config.getfloat('Limits', 'long')
+
+                if 'Serial' in config.sections():
+                    itms = (i[0] for i in config.items('Serial'))
+                    if 'port' in itms:
+                        port = config.get('Serial', 'port')
+                    if 'baud' in itms:
+                        baud = config.get('Serial', 'baud')
+
                 CONFIG = Config(config.get('Database', 'host'),
                                 config.get('Database', 'user'),
                                 config.get('Database', 'pwd'),
                                 config.get('Database', 'port'),
                                 config.get('Database', 'db'),
-                                # config.get('Serial', 'port'),
-                                glob('/dev/tty[AU]*')[0],
-                                config.get('Serial', 'baud'),
+                                port,
+                                baud,
                                 config.get('Serial', 'scanners').split(';'),
-                                float(config.get('Limits', 'wait')),
-                                float(config.get('Limits', 'short')),
-                                float(config.get('Limits', 'long')),)
+                                wait,
+                                too_short,
+                                too_long,)
                 return CONFIG
         except IndexError:
             print("Serial port not found.")
