@@ -19,8 +19,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 from asyncore import file_dispatcher, loop
 from serial import Serial
-from threading import Thread
+from threading import Thread, Event
 from datetime import datetime
+import sys
 import evdev
 from cycles import config
 from cycles import mysql
@@ -181,11 +182,18 @@ def insert_and_remove(cyc):
 
 class SerialThread(Thread):
     def __init__(self, ser):
-        Thread.__init__(self)
+        super(SerialThread, self).__init__()
+        self._stop_event = Event()
         self.ser = ser
 
     def run(self):
         serial_loop(self.ser)
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
 
 
 def serial_loop(ser):
@@ -195,7 +203,7 @@ def serial_loop(ser):
     global newStart
     while True:
         if POLL_ARGS["comm"] == "stop":
-            exit(0)
+            break
         line = ser.readline().decode('utf-8').strip()
         mysql.log(line, CONFIG)
 
@@ -219,19 +227,33 @@ def serial_loop(ser):
                     if CYCLE not in CYCLES:
                         CYCLES.append(CYCLE)
             except Exception as e:
-                mysql.log('Failed start. (%s)' % (e,), CONFIG)
+                lineno = sys.exc_info()[-1].tb_lineno
+                mysql.log('Failed start at line %s. (%s)' % (lineno, e,),
+                          CONFIG)
         if "stop" in line:
             try:
                 # CYCLE.process_event(line)
                 newStart = False
                 CYCLE.stop()
             except Exception as e:
-                mysql.log('Failed stop. (%s)' % (e,), CONFIG)
+                lineno = sys.exc_info()[-1].tb_lineno
+                mysql.log('Failed stop at line %s. (%s)' % (lineno, e,),
+                          CONFIG)
 
 
 class ExpireThread(Thread):
+    def __init__(self):
+        super(ExpireThread, self).__init__()
+        self._stop_event = Event()
+
     def run(self):
         expire_cycle()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
 
 
 def expire_cycle():
@@ -239,7 +261,7 @@ def expire_cycle():
     global newStart
     while True:
         if POLL_ARGS["comm"] == "stop":
-            exit(0)
+            break
         try:
             cyc = CYCLE
             if cyc is not None:
@@ -250,7 +272,8 @@ def expire_cycle():
                             abs(dt - cyc.LastUpdate).seconds > CONFIG.wait):
                         cyc.execute_stopfuncs()
         except Exception as e:
-            mysql.log('Failed expire. (%s)' % (e,), CONFIG)
+            lineno = sys.exc_info()[-1].tb_lineno
+            mysql.log('Failed expire at line %s. (%s)' % (lineno, e,), CONFIG)
 
 
 def devlist():
@@ -343,18 +366,19 @@ def main():
             exit(-1)
 
         t = SerialThread(ser)
-        # t.daemon = True
         t.start()
 
         et = ExpireThread()
-        # et.daemon = True
         et.start()
 
         mysql.log('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
         loop()
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
+        t.stop()
+        et.stop()
         t.join()
+        et.join()
         if CYCLE.starttime is not None and CYCLE.stoptime is not None:
             CYCLE.execute_stopfuncs()
         mysql.log('Keyboard Interrupt', CONFIG)
