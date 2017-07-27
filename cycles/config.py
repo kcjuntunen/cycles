@@ -47,7 +47,7 @@ def config():
                 if 'Limits' in config.sections():
                     itms = (i[0] for i in config.items('Limits'))
                     if 'wait' in itms:
-                        wait = config.get('Limits', 'wait')
+                        wait = config.getfloat('Limits', 'wait')
                     if 'short' in itms:
                         too_short = config.getfloat('Limits', 'short')
                     if 'long' in itms:
