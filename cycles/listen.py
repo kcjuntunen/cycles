@@ -38,6 +38,8 @@ try:
 except Exception as e:
     print('Failure loading config. (%s)' % (e,))
 
+ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
+
 try:
     CurrentProg
 except NameError:
@@ -238,14 +240,17 @@ def expire_cycle():
     while True:
         if POLL_ARGS["comm"] == "stop":
             exit(0)
-        cyc = CYCLE
-        if cyc is not None:
-            if (cyc.starttime is not None and
-                    cyc.stoptime is not None):
-                dt = datetime.utcnow()
-                if (not newStart and
-                        abs(dt - cyc.LastUpdate).seconds > CONFIG.wait):
-                    cyc.execute_stopfuncs()
+        try:
+            cyc = CYCLE
+            if cyc is not None:
+                if (cyc.starttime is not None and
+                        cyc.stoptime is not None):
+                    dt = datetime.utcnow()
+                    if (not newStart and
+                            abs(dt - cyc.LastUpdate).seconds > CONFIG.wait):
+                        cyc.execute_stopfuncs()
+        except Exception as e:
+            mysql.log('Failed expire. (%s)' % (e,), CONFIG)
 
 
 def devlist():
@@ -337,13 +342,12 @@ def main():
             mysql.log(ex, CONFIG)
             exit(-1)
 
-        ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
         t = SerialThread(ser)
-        t.daemon = True
+        # t.daemon = True
         t.start()
 
         et = ExpireThread()
-        et.daemon = True
+        # et.daemon = True
         et.start()
 
         mysql.log('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
