@@ -177,7 +177,10 @@ def insert_and_remove(cyc):
             cyc._starttime = None
             cyc._stoptime = None
     except Exception as e:
-        mysql.log('Failed insert. (%s)' % (e,), CONFIG)
+        with open('/var/log/cycles_fail.log', 'a+') as fh:
+            msg = 'Failed insert. (%s)' % (e,)
+            fh.write(msg)
+            mysql.log(msg, CONFIG)
 
 
 class SerialThread(Thread):

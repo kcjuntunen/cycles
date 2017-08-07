@@ -25,7 +25,7 @@ from glob import glob
 
 Config = namedtuple('Config', 'dbhost dbuser dbpass dbport '
                     'db serialport serialbaud scanners wait '
-                    'too_short too_long')
+                    'too_short too_long log_path')
 
 
 def config():
@@ -43,6 +43,7 @@ def config():
                 too_long = 1800
                 port = glob('/dev/tty[AU]*')[0]
                 baud = 115200
+                log_path = '/var/log/cycles_fail.log'
 
                 if 'Limits' in config.sections():
                     itms = (i[0] for i in config.items('Limits'))
@@ -60,6 +61,11 @@ def config():
                     if 'baud' in itms:
                         baud = config.get('Serial', 'baud')
 
+                if 'Log' in config.sections():
+                    itms = (i[0] for i in config.items('Log'))
+                    if 'path' in itms:
+                        log_path = config.get('Log', 'path')
+
                 CONFIG = Config(config.get('Database', 'host'),
                                 config.get('Database', 'user'),
                                 config.get('Database', 'pwd'),
@@ -70,7 +76,9 @@ def config():
                                 config.get('Serial', 'scanners').split(';'),
                                 wait,
                                 too_short,
-                                too_long,)
+                                too_long,
+                                log_path,)
+
                 return CONFIG
         except IndexError:
             print("Serial port not found.")
