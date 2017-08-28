@@ -18,6 +18,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
+from datetime import datetime
 import pymysql.cursors
 import socket
 
@@ -45,8 +46,8 @@ def insert(cyc, config):
             connection.commit()
         except:
             with open(config.log_path, 'a+') as fh:
-                msg = 'Failed to log cycle: [%s]' % (cyc, )
-                fh.write(msg)
+                msg = '%s: Failed to log cycle: [%s]\n' % (datetime.utcnow(), cyc, )
+                fh.writelines(msg)
                 print(msg)
         finally:
             connection.close()
@@ -61,7 +62,7 @@ def log(entry, config):
                                  password=config.dbpass,
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
-    filtered_entry = ''.join(c for c in entry if c.isprintable())
+    filtered_entry = ''.join(c for c in str(entry) if c.isprintable())
     try:
         with connection.cursor() as cursor:
             sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
@@ -69,9 +70,15 @@ def log(entry, config):
                    "(UTC_TIMESTAMP(), %s, %s)")
             cursor.execute(sql, (filtered_entry[0:1024], HOSTNAME,))
         connection.commit()
-        print(entry)
+        with open(config.log_path, 'a+') as fh:
+            msg = '%s: %s\n' % (datetime.utcnow(), entry, )
+            fh.writelines(msg)
+            print(msg)
     except:
-        print('Failed to log event: [%s]' % (entry, ))
+        with open(config.log_path, 'a+') as fh:
+            msg = 'Failed to log event: [%s]\n' % (entry, )
+            fh.writelines(msg)
+            print(msg)
     finally:
         connection.close()
 
