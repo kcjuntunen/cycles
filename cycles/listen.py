@@ -23,21 +23,40 @@ from threading import Thread, Event
 from datetime import datetime
 import sys
 import evdev
+import urllib3
 from cycles import config
 from cycles import mysql
 from cycles.cycle import Cycle
 from cycles.cycles import Cycles
 from cycles.machinesetup import MachineSetup
 
+
+def connection_up(server):
+    timeout = urllib3.Timeout(connect=2.0, read=2.0)
+    http = urllib3.PoolManager(timeout=timeout)
+    try:
+        http.request('GET', server)
+    except:
+        with open('/var/log/cycles_fail.log', 'a+') as fh:
+            msg = '%s: Cannot connect to server.\n' % datetime.utcnow()
+            fh.writelines(msg)
+            print(msg)
+        return False
+    return True
+
+
 try:
     CONFIG = config.config()
+    if not connection_up(CONFIG.dbhost):
+        exit(-1)
+
     mysql.log("Ignoring cycles shorter than %s seconds, "
               "longer than %s minutes; "
               "and gaps shorter than %s seconds." % (CONFIG.too_short,
                                                      CONFIG.too_long / 60,
                                                      CONFIG.wait,), CONFIG)
 except Exception as e:
-    print('Failure loading config. (%s)' % (e,))
+    print('%s: Failure loading config. (%s)' % (datetime.utcnow(), e,))
 
 ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
 
@@ -106,8 +125,10 @@ class InputDeviceDispatcher(file_dispatcher):
         file_dispatcher.__init__(self, device)
 
     def recv(self, ign=None):
-        # print("scanner recv")
-        return self.device.read()
+        try:
+            return self.device.read()
+        except TypeError as ex:
+            mysql.log('Barcode scanner not found.', CONFIG)
 
     def handle_read(self):
         global CYCLES
@@ -177,10 +198,8 @@ def insert_and_remove(cyc):
             cyc._starttime = None
             cyc._stoptime = None
     except Exception as e:
-        with open('/var/log/cycles_fail.log', 'a+') as fh:
-            msg = 'Failed insert. (%s)' % (e,)
-            fh.write(msg)
-            mysql.log(msg, CONFIG)
+        msg = 'Failed insert. (%s)' % (e,)
+        mysql.log(msg, CONFIG)
 
 
 class SerialThread(Thread):
@@ -364,8 +383,8 @@ def main():
         try:
             InputDeviceDispatcher(evdev.InputDevice(
                 get_device(CONFIG.scanners)))
-        except Exception as ex:
-            mysql.log(ex, CONFIG)
+        except TypeError as ex:
+            mysql.log('Barcode scanner not found.', CONFIG)
             exit(-1)
 
         t = SerialThread(ser)
