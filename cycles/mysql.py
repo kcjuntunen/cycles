@@ -70,10 +70,6 @@ def log(entry, config):
                    "(UTC_TIMESTAMP(), %s, %s)")
             cursor.execute(sql, (filtered_entry[0:1024], HOSTNAME,))
         connection.commit()
-        with open(config.log_path, 'a+') as fh:
-            msg = '%s: %s\n' % (datetime.utcnow(), entry, )
-            fh.writelines(msg)
-            print(msg)
     except:
         with open(config.log_path, 'a+') as fh:
             msg = 'Failed to log event: [%s]\n' % (entry, )
