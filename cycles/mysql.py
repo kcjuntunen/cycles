@@ -44,7 +44,7 @@ def insert(cyc, config):
                 cursor.execute(sql, cyc.data_set())
             connection.commit()
         except:
-            with open('/var/log/cycles_fail.log', 'a+') as fh:
+            with open(config.log_path, 'a+') as fh:
                 msg = 'Failed to log cycle: [%s]' % (cyc, )
                 fh.write(msg)
                 print(msg)
