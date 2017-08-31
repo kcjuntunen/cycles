@@ -32,13 +32,13 @@ from cycles.machinesetup import MachineSetup
 
 
 def connection_up(server):
-    timeout = urllib3.Timeout(connect=2.0, read=2.0)
+    timeout = urllib3.Timeout(connect=5.0, read=5.0)
     http = urllib3.PoolManager(timeout=timeout)
     try:
         http.request('GET', server)
     except:
         with open('/var/log/cycles_fail.log', 'a+') as fh:
-            msg = '%s: Cannot connect to server.\n' % datetime.utcnow()
+            msg = '%s: Cannot connect to server.\n' % datetime.now()
             fh.writelines(msg)
             print(msg)
         return False

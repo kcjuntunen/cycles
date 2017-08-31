@@ -46,7 +46,7 @@ def insert(cyc, config):
             connection.commit()
         except:
             with open(config.log_path, 'a+') as fh:
-                msg = '%s: Failed to log cycle: [%s]\n' % (datetime.utcnow(), cyc, )
+                msg = '%s: Failed to log cycle: [%s]\n' % (datetime.now(), cyc, )
                 fh.writelines(msg)
                 print(msg)
         finally:
@@ -72,7 +72,7 @@ def log(entry, config):
         connection.commit()
     except:
         with open(config.log_path, 'a+') as fh:
-            msg = 'Failed to log event: [%s]\n' % (entry, )
+            msg = '%s: Failed to log event: [%s]\n' % (datetime.now(), entry, )
             fh.writelines(msg)
             print(msg)
     finally:
