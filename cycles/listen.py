@@ -47,8 +47,8 @@ def connection_up(server):
 
 try:
     CONFIG = config.config()
-    if not connection_up(CONFIG.dbhost):
-        exit(-1)
+    # if not connection_up(CONFIG.dbhost):
+    #     exit(-1)
 
     mysql.log("Ignoring cycles shorter than %s seconds, "
               "longer than %s minutes; "
