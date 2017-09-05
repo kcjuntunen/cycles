@@ -37,6 +37,7 @@ def config():
                 config = configparser.ConfigParser()
                 config.readfp(fh)
 
+                sections = config.sections()
                 # Defaults
                 wait = 10
                 too_short = 7.55
@@ -45,8 +46,8 @@ def config():
                 baud = 115200
                 log_path = '/var/log/cycles_fail.log'
 
-                if 'Limits' in config.sections():
-                    itms = (i[0] for i in config.items('Limits'))
+                if 'Limits' in sections:
+                    itms = [i[0] for i in config.items('Limits')]
                     if 'wait' in itms:
                         wait = config.getfloat('Limits', 'wait')
                     if 'short' in itms:
@@ -54,15 +55,15 @@ def config():
                     if 'long' in itms:
                         too_long = config.getfloat('Limits', 'long')
 
-                if 'Serial' in config.sections():
-                    itms = (i[0] for i in config.items('Serial'))
+                if 'Serial' in sections:
+                    itms = [i[0] for i in config.items('Serial')]
                     if 'port' in itms:
                         port = config.get('Serial', 'port')
                     if 'baud' in itms:
                         baud = config.get('Serial', 'baud')
 
-                if 'Log' in config.sections():
-                    itms = (i[0] for i in config.items('Log'))
+                if 'Log' in sections:
+                    itms = [i[0] for i in config.items('Log')]
                     if 'path' in itms:
                         log_path = config.get('Log', 'path')
 
