@@ -58,7 +58,7 @@ try:
 except Exception as e:
     print('%s: Failure loading config. (%s)' % (datetime.utcnow(), e,))
 
-ser = Serial(CONFIG.serialport, CONFIG.serialbaud)
+ser = Serial(CONFIG.serialport, CONFIG.serialbaud, timeout=1)
 
 try:
     CurrentProg
@@ -129,6 +129,9 @@ class InputDeviceDispatcher(file_dispatcher):
             return self.device.read()
         except TypeError as ex:
             mysql.log('Barcode scanner not found.', CONFIG)
+
+    def writable(self):
+        return False
 
     def handle_read(self):
         global CYCLES
@@ -226,8 +229,13 @@ def serial_loop(ser):
     while True:
         if POLL_ARGS["comm"] == "stop":
             break
-        line = ser.readline().decode('utf-8').strip()
-        mysql.log(line, CONFIG)
+        line = ser.read(1).decode('utf8')
+        line += ser.readline().decode('utf-8').strip()
+
+        if line != '':
+            mysql.log(line, CONFIG)
+        else:
+            continue
 
         if "start" in line:
             try:
@@ -394,7 +402,7 @@ def main():
         et.start()
 
         mysql.log('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
-        loop()
+        loop(timeout=5.0)
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
         t.stop()
