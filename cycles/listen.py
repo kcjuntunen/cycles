@@ -229,8 +229,11 @@ def serial_loop(ser):
     while True:
         if POLL_ARGS["comm"] == "stop":
             break
-        line = ser.read(1).decode('utf8')
-        line += ser.readline().decode('utf-8').strip()
+        try:
+            line = ser.read(1).decode('utf8')
+            line += ser.readline().decode('utf8').strip()
+        except:
+            mysql.log('Failed utf8 decode.', CONFIG)
 
         if line != '':
             mysql.log(line, CONFIG)
