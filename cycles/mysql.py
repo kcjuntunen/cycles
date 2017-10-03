@@ -35,7 +35,6 @@ def insert(cyc, config):
                                  password=config.dbpass,
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
-    print(cyc)
     if cyc.stoptime is not None and cyc.starttime is not None:
         try:
             with connection.cursor() as cursor:
@@ -46,10 +45,7 @@ def insert(cyc, config):
                 cursor.execute(sql, cyc.data_set())
             connection.commit()
         except:
-            with open(config.log_path, 'a+') as fh:
-                msg = '%s: Failed to log cycle: [%s]\n' % (datetime.now(), cyc, )
-                fh.writelines(msg)
-                print(msg)
+            loglocal('EVERR', 'Failed to insert "{}"'.format(cyc), config)
         finally:
             connection.close()
 
@@ -64,7 +60,7 @@ def log(entry, config):
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
     filtered_entry = ''.join(c for c in str(entry) if c.isprintable())
-    print(entry)
+
     try:
         with connection.cursor() as cursor:
             sql = ("INSERT INTO `CUT_CYCLE_EVENTS` "
@@ -73,12 +69,43 @@ def log(entry, config):
             cursor.execute(sql, (filtered_entry[0:1024], HOSTNAME,))
         connection.commit()
     except:
-        with open(config.log_path, 'a+') as fh:
-            msg = '%s: Failed to log event: [%s]\n' % (datetime.now(), entry, )
-            fh.writelines(msg)
-            print(msg)
+        loglocal('LOGERR', 'Failed to log "{}"'.format(entry), config)
     finally:
         connection.close()
+
+
+def loglocal(tp, entry, config):
+    with open(config.log_path, 'a+') as fh:
+        msg = '{}: [{}]: {}\n'.format(datetime.now(), tp, entry)
+        fh.writelines(msg)
+
+
+def log_error(entry, config):
+    if config.log_err:
+        log(entry, config)
+
+    loglocal('ERROR', entry, config)
+
+
+def log_input(entry, config):
+    if config.log_input:
+        log(entry, config)
+
+    loglocal('INPUT', entry, config)
+
+
+def log_event(entry, config):
+    if config.log_events:
+        log(entry, config)
+
+    loglocal('EVENT', entry, config)
+
+
+def log_startup(entry, config):
+    if log_startup(entry, config):
+        log(entry, config)
+
+    loglocal('START', entry, config)
 
 
 def log_err(entry, config):
