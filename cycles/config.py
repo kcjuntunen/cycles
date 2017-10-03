@@ -25,7 +25,8 @@ from glob import glob
 
 Config = namedtuple('Config', 'dbhost dbuser dbpass dbport '
                     'db serialport serialbaud scanners wait '
-                    'too_short too_long log_path')
+                    'too_short too_long log_path log_input '
+                    'log_events log_err log_startup')
 
 
 def config():
@@ -45,6 +46,10 @@ def config():
                 port = glob('/dev/tty[AU]*')[0]
                 baud = 115200
                 log_path = '/var/log/cycles_fail.log'
+                log_input = False
+                log_events = True
+                log_err = True
+                log_startup = True
 
                 if 'Limits' in sections:
                     itms = [i[0] for i in config.items('Limits')]
@@ -66,6 +71,14 @@ def config():
                     itms = [i[0] for i in config.items('Log')]
                     if 'path' in itms:
                         log_path = config.get('Log', 'path')
+                    if 'input' in itms:
+                        log_input = config.getboolean('Log', 'input')
+                    if 'events' in itms:
+                        log_events = config.getboolean('Log', 'events')
+                    if 'err' in itms:
+                        log_err = config.getboolean('Log', 'err')
+                    if 'startup' in itms:
+                        log_startup = config.getboolean('Log', 'startup')
 
                 CONFIG = Config(config.get('Database', 'host'),
                                 config.get('Database', 'user'),
@@ -78,7 +91,11 @@ def config():
                                 wait,
                                 too_short,
                                 too_long,
-                                log_path,)
+                                log_path,
+                                log_input,
+                                log_events,
+                                log_err,
+                                log_startup,)
 
                 return CONFIG
         except IndexError:
