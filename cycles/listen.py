@@ -50,11 +50,12 @@ try:
     # if not connection_up(CONFIG.dbhost):
     #     exit(-1)
 
-    mysql.log("Ignoring cycles shorter than %s seconds, "
-              "longer than %s minutes; "
-              "and gaps shorter than %s seconds." % (CONFIG.too_short,
-                                                     CONFIG.too_long / 60,
-                                                     CONFIG.wait,), CONFIG)
+    msg = ('Ignoring cycles shorter than {} seconds,'
+           'longer than {} minutes; '
+           'gaps shorter than {} seconds'.format(CONFIG.too_short,
+                                                 CONFIG.too_long / 60,
+                                                 CONFIG.wait,))
+    mysql.log_startup(msg, CONFIG)
 except Exception as e:
     print('%s: Failure loading config. (%s)' % (datetime.utcnow(), e,))
 
@@ -128,7 +129,7 @@ class InputDeviceDispatcher(file_dispatcher):
         try:
             return self.device.read()
         except TypeError as ex:
-            mysql.log('Barcode scanner not found.', CONFIG)
+            mysql.log_error('Barcode scanner not found.', CONFIG)
 
     def writable(self):
         return False
@@ -139,8 +140,7 @@ class InputDeviceDispatcher(file_dispatcher):
         global SetupMode
         global CurrentProg
         reading = recv_scanner(self.device)
-        print(reading)
-        mysql.log(reading, CONFIG)
+        mysql.log_input(reading, CONFIG)
         if reading == "%EOS%" and SetupMode:
             SetupMode = False
             SETUP.stop()
@@ -179,7 +179,7 @@ def insert_and_remove(cyc):
 
         if not too_short and not too_long:
             msg = "Inserting (%s)" % (cyc, )
-            mysql.log(msg, CONFIG)
+            mysql.log_event(msg, CONFIG)
             mysql.insert(cyc, CONFIG)
             CYCLES.remove(cyc)
             cyc._starttime = None
@@ -188,7 +188,7 @@ def insert_and_remove(cyc):
         if too_short:
             msg = "Cycle < %s seconds. Ignoring (%s)" % (CONFIG.too_short,
                                                          cyc,)
-            mysql.log(msg, CONFIG)
+            mysql.log_event(msg, CONFIG)
             CYCLES.remove(cyc)
             cyc._starttime = None
             cyc._stoptime = None
@@ -196,13 +196,13 @@ def insert_and_remove(cyc):
         if too_long:
             msg = "Cycle > %s minutes. Ignoring (%s)" % (CONFIG.too_long / 60,
                                                          cyc,)
-            mysql.log(msg, CONFIG)
+            mysql.log_event(msg, CONFIG)
             CYCLES.remove(cyc)
             cyc._starttime = None
             cyc._stoptime = None
     except Exception as e:
         msg = 'Failed insert. (%s)' % (e,)
-        mysql.log(msg, CONFIG)
+        mysql.log_error(msg, CONFIG)
 
 
 class SerialThread(Thread):
@@ -233,10 +233,10 @@ def serial_loop(ser):
             line = ser.read(1).decode('utf8')
             line += ser.readline().decode('utf8').strip()
         except:
-            mysql.log('Failed utf8 decode.', CONFIG)
+            mysql.log_error('Failed utf8 decode.', CONFIG)
 
         if line != '':
-            mysql.log(line, CONFIG)
+            mysql.log_input(line, CONFIG)
         else:
             continue
 
@@ -249,7 +249,7 @@ def serial_loop(ser):
                     continue
                 if (CYCLE._stopfuncsexeced is True or
                         CYCLE.starttime is None):
-                    mysql.log('Creating new cycle @ %s' % (dt,), CONFIG)
+                    mysql.log_event('Creating new cycle @ %s' % (dt,), CONFIG)
                     newStart = False
                     CYCLE = Cycle(CurrentProg)
                     CYCLE._stopfuncsexeced = False
@@ -261,7 +261,7 @@ def serial_loop(ser):
                         CYCLES.append(CYCLE)
             except Exception as e:
                 lineno = sys.exc_info()[-1].tb_lineno
-                mysql.log('Failed start at line %s. (%s)' % (lineno, e,),
+                mysql.log_error('Failed start at line %s. (%s)' % (lineno, e,),
                           CONFIG)
         if "stop" in line:
             try:
@@ -270,7 +270,7 @@ def serial_loop(ser):
                 CYCLE.stop()
             except Exception as e:
                 lineno = sys.exc_info()[-1].tb_lineno
-                mysql.log('Failed stop at line %s. (%s)' % (lineno, e,),
+                mysql.log_error('Failed stop at line %s. (%s)' % (lineno, e,),
                           CONFIG)
 
 
@@ -306,7 +306,7 @@ def expire_cycle():
                         cyc.execute_stopfuncs()
         except Exception as e:
             lineno = sys.exc_info()[-1].tb_lineno
-            mysql.log('Failed expire at line %s. (%s)' % (lineno, e,), CONFIG)
+            mysql.log_error('Failed expire at line %s. (%s)' % (lineno, e,), CONFIG)
 
 
 def devlist():
@@ -336,7 +336,7 @@ def get_device(device_names):
     for name in device_names:
         for dev in device_list:
             if name in dev.name:
-                mysql.log('Found "%s"' % (name,), CONFIG)
+                mysql.log_startup('Found "%s"' % (name,), CONFIG)
                 return dev.fn
 
 
@@ -395,7 +395,7 @@ def main():
             InputDeviceDispatcher(evdev.InputDevice(
                 get_device(CONFIG.scanners)))
         except TypeError as ex:
-            mysql.log('Barcode scanner not found.', CONFIG)
+            mysql.log_error('Barcode scanner not found.', CONFIG)
             exit(-1)
 
         t = SerialThread(ser)
@@ -404,7 +404,7 @@ def main():
         et = ExpireThread()
         et.start()
 
-        mysql.log('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
+        mysql.log_startup('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
         loop(timeout=5.0)
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
@@ -414,9 +414,9 @@ def main():
         et.join()
         if CYCLE.starttime is not None and CYCLE.stoptime is not None:
             CYCLE.execute_stopfuncs()
-        mysql.log('Keyboard Interrupt', CONFIG)
+        mysql.log_startup('Keyboard Interrupt', CONFIG)
     finally:
-        mysql.log('Exiting', CONFIG)
+        mysql.log_startup('Exiting', CONFIG)
 
     exit(0)
 
