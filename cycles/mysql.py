@@ -102,7 +102,7 @@ def log_event(entry, config):
 
 
 def log_startup(entry, config):
-    if log_startup(entry, config):
+    if log_startup:
         log(entry, config)
 
     loglocal('START', entry, config)
