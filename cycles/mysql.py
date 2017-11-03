@@ -24,18 +24,27 @@ import socket
 
 
 HOSTNAME = socket.getfqdn().split()[0]
+EARLIEST = None
 
 
 def insert(cyc, config):
     """
     Insert cycle data into a MySQL DB.
     """
+    global EARLIEST
+    if EARLIEST is None:
+        EARLIEST = latest_entry_time(config)
+
+    time_ok = (EARLIEST is not None) and (cyc.starttime > EARLIEST)
+    start_not_none = cyc.starttime is not None
+    stop_not_none = cyc.stoptime is not None
+
     connection = pymysql.connect(host=config.dbhost,
                                  user=config.dbuser,
                                  password=config.dbpass,
                                  db=config.db,
                                  cursorclass=pymysql.cursors.DictCursor)
-    if cyc.stoptime is not None and cyc.starttime is not None:
+    if time_ok and start_not_none and stop_not_none:
         try:
             with connection.cursor() as cursor:
                 sql = ("INSERT INTO `CUT_CYCLE_TIMES` "
@@ -48,6 +57,9 @@ def insert(cyc, config):
             loglocal('EVERR', 'Failed to insert "{}"'.format(cyc), config)
         finally:
             connection.close()
+
+    if not time_ok:
+        log_error("Time is out of whack. {}".format(cyc.starttime), config)
 
 
 def log(entry, config):
@@ -125,5 +137,22 @@ def log_err(entry, config):
                    "(%s, %s, %s, %s, %s, %s)")
             cursor.execute(sql, entry)
         connection.commit()
+    finally:
+        connection.close()
+
+
+def latest_entry_time(config):
+    connection = pymysql.connect(host=config.dbhost,
+                                 user=config.dbuser,
+                                 password=config.dbpass,
+                                 db=config.db,
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            sql = ("SELECT MAX(STARTTIME) FROM CUT_CYCLE_TIMES")
+            cursor.execute(sql)
+            return cursor.fetchone()['MAX(STARTTIME)']
+    except:
+        log_error('Could not get latest date from db.', config)
     finally:
         connection.close()
