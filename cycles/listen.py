@@ -24,6 +24,7 @@ from datetime import datetime
 import sys
 import evdev
 import urllib3
+import os
 from cycles import config
 from cycles import mysql
 from cycles.cycle import Cycle
@@ -55,6 +56,16 @@ try:
            'gaps shorter than {} seconds'.format(CONFIG.too_short,
                                                  CONFIG.too_long / 60,
                                                  CONFIG.wait,))
+
+    # Check for large log. Remove if big.
+    logsize = os.path.getsize(CONFIG.log_path)
+    if logsize > CONFIG.log_limit * 1024 * 1024:
+        logsize_mesage = 'Log file is {} bytes. Dumping.'.format(logsize)
+        mysql.log_startup(logsize_mesage, CONFIG)
+        os.remove(CONFIG.log_path)
+        with open(CONFIG.log_path, 'w') as l:
+            l.write('')
+
     mysql.log_startup(msg, CONFIG)
 except Exception as e:
     print('%s: Failure loading config. (%s)' % (datetime.utcnow(), e,))

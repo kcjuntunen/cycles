@@ -26,7 +26,7 @@ from glob import glob
 Config = namedtuple('Config', 'dbhost dbuser dbpass dbport '
                     'db serialport serialbaud scanners wait '
                     'too_short too_long log_path log_input '
-                    'log_events log_err log_startup')
+                    'log_events log_err log_startup log_limit')
 
 
 def config():
@@ -50,6 +50,7 @@ def config():
                 log_events = True
                 log_err = True
                 log_startup = True
+                log_limit = 128
 
                 if 'Limits' in sections:
                     itms = [i[0] for i in config.items('Limits')]
@@ -79,6 +80,8 @@ def config():
                         log_err = config.getboolean('Log', 'err')
                     if 'startup' in itms:
                         log_startup = config.getboolean('Log', 'startup')
+                    if 'limit' in itms:
+                        log_limit = config.getint('Log', 'limit')
 
                 CONFIG = Config(config.get('Database', 'host'),
                                 config.get('Database', 'user'),
@@ -95,7 +98,8 @@ def config():
                                 log_input,
                                 log_events,
                                 log_err,
-                                log_startup,)
+                                log_startup,
+                                log_limit,)
 
                 return CONFIG
         except IndexError:
