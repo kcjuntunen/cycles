@@ -63,8 +63,6 @@ try:
         logsize_mesage = 'Log file is {} bytes. Dumping.'.format(logsize)
         mysql.log_startup(logsize_mesage, CONFIG)
         os.remove(CONFIG.log_path)
-        with open(CONFIG.log_path, 'w') as l:
-            l.write('')
 
     mysql.log_startup(msg, CONFIG)
 except Exception as e:
