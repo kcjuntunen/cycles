@@ -262,7 +262,7 @@ def serial_loop(ser):
             except Exception as e:
                 lineno = sys.exc_info()[-1].tb_lineno
                 mysql.log_error('Failed start at line %s. (%s)' % (lineno, e,),
-                          CONFIG)
+                                CONFIG)
         if "stop" in line:
             try:
                 # CYCLE.process_event(line)
@@ -271,7 +271,7 @@ def serial_loop(ser):
             except Exception as e:
                 lineno = sys.exc_info()[-1].tb_lineno
                 mysql.log_error('Failed stop at line %s. (%s)' % (lineno, e,),
-                          CONFIG)
+                                CONFIG)
 
 
 class ExpireThread(Thread):
@@ -306,7 +306,8 @@ def expire_cycle():
                         cyc.execute_stopfuncs()
         except Exception as e:
             lineno = sys.exc_info()[-1].tb_lineno
-            mysql.log_error('Failed expire at line %s. (%s)' % (lineno, e,), CONFIG)
+            mysql.log_error('Failed expire at line %s. (%s)' % (lineno, e,),
+                            CONFIG)
 
 
 def devlist():
@@ -404,7 +405,8 @@ def main():
         et = ExpireThread()
         et.start()
 
-        mysql.log_startup('Monitor started at %s.' % (datetime.utcnow(),), CONFIG)
+        mysql.log_startup('Monitor started at %s.' % (datetime.utcnow(),),
+                          CONFIG)
         loop(timeout=5.0)
     except KeyboardInterrupt:
         POLL_ARGS["comm"] = "stop"
