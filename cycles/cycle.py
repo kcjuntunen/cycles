@@ -165,7 +165,7 @@ class Cycle(object):
             self._stopfuncsexeced = True
             for func in self._stopfunctions:
                 func(self)
-                self._stopfunctions.remove(func)
+            self._stopfunctions = None
 
     def schedule_stopfuncs(self):
         if self._stopfunctions is not None:
